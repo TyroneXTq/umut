@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel - Yildiz Deva</title>
+    <style>
+      :root {
+        --dark: #142534;
+        --primary: #205d8e;
+      }
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        background: #f4f6f8;
+      }
+      header {
+        background: var(--dark);
+        color: white;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      .card {
+        background: white;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 8px 20px rgba(20, 37, 52, 0.07);
+      }
+      .item {
+        display: grid;
+        grid-template-columns: 1.2fr 1.4fr 0.8fr auto auto;
+        gap: 8px;
+        align-items: stretch;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #e5e8eb;
+        padding-bottom: 10px;
+      }
+      input,
+      button {
+        padding: 9px;
+        border: 1px solid #b8c2cc;
+        border-radius: 6px;
+      }
+      button {
+        background: var(--dark);
+        color: white;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #d04747;
+      }
+      .gallery-scroller {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        scroll-snap-type: x mandatory;
+      }
+      .gallery-scroller::-webkit-scrollbar {
+        height: 8px;
+      }
+      .gallery-scroller::-webkit-scrollbar-thumb {
+        background: #c5ced8;
+        border-radius: 8px;
+      }
+      .gallery-tile {
+        flex: 0 0 200px;
+        scroll-snap-align: start;
+        border: 1px solid #e1e6eb;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #f7f9fb;
+      }
+      .gallery-tile img {
+        width: 100%;
+        height: 130px;
+        object-fit: cover;
+        display: block;
+      }
+      .gallery-meta {
+        padding: 8px;
+        font-size: 12px;
+        color: #4b5563;
+      }
+      .small {
+        font-size: 13px;
+        color: #6b7582;
+      }
+      a {
+        color: var(--dark);
+      }
+      @media (max-width: 900px) {
+        .item { grid-template-columns: 1fr; }
+      }
+      .status {
+        border: 1px solid #e6d4a3;
+        background: #fff7db;
+        color: #3b2f12;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .status.ok {
+        border-color: #bcd7c2;
+        background: #edf8f0;
+        color: #1f3a27;
+      }
+      .status.bad {
+        border-color: #e3b6b6;
+        background: #fdecec;
+        color: #5a1f1f;
+      }
+      .hidden {
+        display: none;
+      }
+      .item.no-divider {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      .item.four-col {
+        grid-template-columns: 1fr 1fr 220px auto;
+      }
+      .item.three-col {
+        grid-template-columns: 1fr 1fr auto;
+      }
+      .gallery-admin-list {
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Admin Panel</h1>
+    </header>
+
+    <div class="container">
+      <div id="serverStatus" class="status hidden"></div>
+
+      <div class="card">
+        <h2>Yeni Urun Ekle</h2>
+        <div class="item no-divider four-col">
+          <input id="newName" type="text" placeholder="Urun adi" />
+          <input id="newDescription" type="text" placeholder="Aciklama" />
+          <input id="newPrice" type="number" step="0.1" placeholder="m2 fiyati (TL)" />
+          <button id="addProductBtn">Urun Ekle</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Urun Fiyatlari</h2>
+        <div id="adminList"></div>
+      </div>
+
+      <div class="card">
+        <h2>Ana Sayfa Galerisi</h2>
+        <div class="item no-divider three-col">
+          <input id="galleryTitle" type="text" placeholder="Baslik (istege bagli)" />
+          <input id="galleryFile" type="file" accept="image/*" aria-label="Galeri dosyasi" />
+          <button id="galleryUploadBtn" type="button">Fotograf Yukle</button>
+        </div>
+        <div id="galleryAdminList" class="gallery-scroller gallery-admin-list"></div>
+      <div class="card">
+        <a href="/">Ana sayfaya don</a>
+      </div>
+    </div>
+
+    <script>
+      const adminList = document.getElementById("adminList");
+      const addProductBtn = document.getElementById("addProductBtn");
+      const galleryAdminList = document.getElementById("galleryAdminList");
+      const galleryUploadBtn = document.getElementById("galleryUploadBtn");
+      const serverStatus = document.getElementById("serverStatus");
+
+      function esc(t) { return String(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+      function getAdminKey() { return localStorage.getItem("adminKey") || ""; }
+
+      function ensureAdminKey() {
+        let key = getAdminKey();
+        if (key) {
+          return key;
+        }
+        key = window.prompt("Admin anahtarini girin (sunucudaki ADMIN_KEY ile ayni olmali)");
+        if (!key) {
+          return "";
+        }
+        localStorage.setItem("adminKey", key);
+        return key;
+      }
+
+      async function adminFetch(url, options) {
+        const key = ensureAdminKey();
+        const opts = options || {};
+        const headers = new Headers();
+
+        if (opts.headers instanceof Headers) {
+          opts.headers.forEach((value, name) => {
+            headers.set(name, value);
+          });
+        } else if (opts.headers && typeof opts.headers === "object") {
+          Object.keys(opts.headers).forEach((name) => {
+            headers.set(name, opts.headers[name]);
+          });
+        }
+
+        if (opts.body instanceof FormData) {
+          headers.delete("content-type");
+        } else if (opts.body && !headers.has("Content-Type")) {
+          headers.set("Content-Type", "application/json");
+        }
+
+        headers.set("x-admin-key", key);
+        const res = await fetch(url, Object.assign({}, opts, { headers }));
+        if (res.status === 401) {
+          const useNew = confirm("Admin anahtari yanlis olabilir. Yeni anahtar girmek ister misiniz?");
+          if (useNew) {
+            localStorage.removeItem("adminKey");
+          }
+        }
+        return res;
+      }
+
+      async function checkServer() {
+        if (!serverStatus) {
+          return;
+        }
+        serverStatus.style.display = "block";
+
+        try {
+          const res = await fetch("/api/health");
+          if (res.ok) {
+            const data = await res.json();
+            serverStatus.className = "status ok";
+            serverStatus.innerHTML =
+              "<strong>Sunucu OK</strong><br>" +
+              "Build: " + data.build +
+              "<br>Galeri API: aktif";
+            return;
+          }
+        } catch (e) {
+          // fall through
+        }
+
+        try {
+          const resGallery = await fetch("/api/gallery");
+          if (resGallery.status === 404) {
+            serverStatus.className = "status bad";
+            serverStatus.innerHTML =
+              "<strong>Sunucu guncel gorunmuyor</strong><br>" +
+              "`/api/gallery` 404";
+            return;
+          }
+        } catch (e2) {
+          // ignore
+        }
+
+        serverStatus.className = "status bad";
+        serverStatus.innerHTML =
+          "<strong>Sunucuya baglanilamadi</strong>";
+      }
+
+      async function loadProducts() {
+        const res = await fetch("/api/products");
+        const products = await res.json();
+        adminList.innerHTML = "";
+
+        products.forEach((p) => {
+          const row = document.createElement("div");
+          row.className = "item";
+
+          const nameInput = document.createElement("input");
+          nameInput.type = "text";
+          nameInput.id = "name-" + p.id;
+          nameInput.value = p.name || "";
+
+          const descInput = document.createElement("input");
+          descInput.type = "text";
+          descInput.id = "desc-" + p.id;
+          descInput.value = p.description || "";
+
+          const priceInput = document.createElement("input");
+          priceInput.type = "number";
+          priceInput.step = "0.1";
+          priceInput.id = "price-" + p.id;
+          priceInput.value = Number(p.price_per_m2).toFixed(2);
+
+          const saveBtn = document.createElement("button");
+          saveBtn.type = "button";
+          saveBtn.dataset.id = String(p.id);
+          saveBtn.dataset.action = "save";
+          saveBtn.textContent = "Kaydet";
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.type = "button";
+          deleteBtn.className = "secondary";
+          deleteBtn.dataset.id = String(p.id);
+          deleteBtn.dataset.action = "delete";
+          deleteBtn.textContent = "Sil";
+
+          row.appendChild(nameInput);
+          row.appendChild(descInput);
+          row.appendChild(priceInput);
+          row.appendChild(saveBtn);
+          row.appendChild(deleteBtn);
+          adminList.appendChild(row);
+        });
+
+        document.querySelectorAll("button[data-id][data-action]").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const id = btn.getAttribute("data-id");
+            const action = btn.getAttribute("data-action");
+
+            if (action === "delete") {
+              const approved = confirm("Bu urunu silmek istiyor musunuz?");
+              if (!approved) {
+                return;
+              }
+              const resDelete = await adminFetch("/api/products/" + id, { method: "DELETE" });
+              const deleteData = await resDelete.json();
+              if (!resDelete.ok) {
+                alert(deleteData.error || "Silme basarisiz");
+                return;
+              }
+              alert("Urun silindi");
+              loadProducts();
+              return;
+            }
+
+            const name = document.getElementById("name-" + id).value.trim();
+            const description = document.getElementById("desc-" + id).value.trim();
+            const price = Number(document.getElementById("price-" + id).value);
+
+            const resUpdate = await adminFetch("/api/products/" + id, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, description, price_per_m2: price }),
+            });
+
+            const data = await resUpdate.json();
+            if (!resUpdate.ok) {
+              alert(data.error || "Guncelleme basarisiz");
+              return;
+            }
+
+            alert("Urun bilgileri guncellendi");
+            loadProducts();
+          });
+        });
+      }
+
+      async function loadGalleryAdmin() {
+        const res = await fetch("/api/gallery");
+        const items = await res.json();
+        galleryAdminList.innerHTML = "";
+        items.forEach((item) => {
+          const tile = document.createElement("div");
+          tile.className = "gallery-tile";
+          const img = document.createElement("img");
+          img.loading = "lazy";
+          img.src = esc(item.url);
+          img.alt = esc(item.title || "Galeri");
+          const meta = document.createElement("div");
+          meta.className = "gallery-meta";
+          meta.textContent = esc(item.title || "Baslik yok");
+
+          const delBtn = document.createElement("button");
+          delBtn.type = "button";
+          delBtn.className = "secondary";
+          delBtn.textContent = "Sil";
+          delBtn.style.width = "100%";
+          delBtn.style.borderRadius = "0";
+          delBtn.addEventListener("click", async () => {
+            const ok = confirm("Bu fotografi silmek istiyor musunuz?");
+            if (!ok) {
+              return;
+            }
+            const resDelete = await adminFetch("/api/gallery/" + item.id, { method: "DELETE" });
+            const data = await resDelete.json();
+            if (!resDelete.ok) {
+              alert(data.error || "Silinemedi");
+              return;
+            }
+            loadGalleryAdmin();
+          });
+
+          tile.appendChild(img);
+          tile.appendChild(meta);
+          tile.appendChild(delBtn);
+          galleryAdminList.appendChild(tile);
+        });
+      }
+
+      async function readApiError(res) {
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          return { error: text || "Bilinmeyen hata" };
+        }
+      }
+
+      galleryUploadBtn.addEventListener("click", async () => {
+        const fileInput = document.getElementById("galleryFile");
+        const title = document.getElementById("galleryTitle").value.trim();
+        if (!fileInput.files || !fileInput.files[0]) {
+          alert("Once bir dosya secin");
+          return;
+        }
+
+        const form = new FormData();
+        form.append("photo", fileInput.files[0]);
+        form.append("title", title);
+
+        const res = await adminFetch("/api/gallery", {
+          method: "POST",
+          body: form,
+        });
+
+        const data = res.ok ? await res.json() : await readApiError(res);
+        if (!res.ok) {
+          alert(data.error || "Yukleme basarisiz");
+          return;
+        }
+
+        fileInput.value = "";
+        document.getElementById("galleryTitle").value = "";
+        loadGalleryAdmin();
+      });
+
+      addProductBtn.addEventListener("click", async () => {
+        const name = document.getElementById("newName").value.trim();
+        const description = document.getElementById("newDescription").value.trim();
+        const price = Number(document.getElementById("newPrice").value);
+
+        const res = await adminFetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            description,
+            price_per_m2: price,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || "Urun eklenemedi");
+          return;
+        }
+
+        alert("Yeni urun eklendi");
+        document.getElementById("newName").value = "";
+        document.getElementById("newDescription").value = "";
+        document.getElementById("newPrice").value = "";
+        loadProducts();
+      });
+
+      checkServer();
+      loadProducts();
+      loadGalleryAdmin();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "yildizdeva",
+  "version": "1.0.0",
+  "description": "Yildiz Deva Cam Balkon Sistemleri basit web uygulamasi",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "multer": "^2.1.1",
+    "sqlite3": "^6.0.1"
+  }
+}

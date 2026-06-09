@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yildiz Deva Cam Balkon Sistemleri</title>
+    <style>
+      :root {
+        --primary: #0f3d66;
+        --dark: #102132;
+        --light: #f2f5f9;
+        --text: #202833;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: var(--light);
+        color: var(--text);
+      }
+      .topbar {
+        background: var(--dark);
+        color: #fff;
+        padding: 10px 16px;
+        text-align: center;
+        font-size: 14px;
+      }
+      .hero {
+        background: linear-gradient(125deg, var(--primary), #1f5f91);
+        color: #fff;
+        padding: 56px 16px;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .hero h1 { margin: 0 0 12px; font-size: 36px; }
+      .hero p { margin: 0; max-width: 700px; line-height: 1.6; }
+      .section { padding: 28px 16px; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 14px;
+      }
+      .showcase {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+      .showcase-head {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: baseline;
+      }
+      .showcase-head h2 { margin: 0; }
+      .showcase-head .sub {
+        color: #5b6775;
+        font-size: 15px;
+        max-width: 520px;
+        line-height: 1.5;
+      }
+      .showcase-col h3 {
+        margin: 0 0 10px;
+        font-size: 18px;
+        color: var(--primary);
+      }
+      .carousel {
+        position: relative;
+      }
+      .carousel-track-wrap {
+        overflow: hidden;
+        border-radius: 12px;
+        border: 1px solid #dbe3ec;
+        background: #eef3f8;
+      }
+      .carousel-track {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding: 10px;
+        -webkit-overflow-scrolling: touch;
+      }
+      .carousel-track::-webkit-scrollbar {
+        height: 8px;
+      }
+      .carousel-track::-webkit-scrollbar-thumb {
+        background: #c5ced8;
+        border-radius: 8px;
+      }
+      .carousel-slide {
+        flex: 0 0 78%;
+        max-width: 420px;
+        scroll-snap-align: start;
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #dfe8f1;
+        aspect-ratio: 4 / 3;
+      }
+      .carousel-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .carousel-caption {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 8px 10px;
+        font-size: 12px;
+        color: #fff;
+        background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.65));
+      }
+      .carousel-nav {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        pointer-events: none;
+        padding: 0 6px;
+      }
+      .carousel-btn {
+        pointer-events: auto;
+        border: none;
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        background: rgba(16, 33, 50, 0.55);
+        color: #fff;
+        cursor: pointer;
+        font-size: 20px;
+        line-height: 1;
+      }
+      .carousel-btn:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 8px 22px rgba(16, 33, 50, 0.08);
+      }
+      .product-title { margin: 0 0 8px; color: var(--primary); }
+      .muted { color: #5b6775; }
+      .calc-wrap {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .field {
+        width: 100%;
+        padding: 11px;
+        border: 1px solid #ccd5df;
+        border-radius: 8px;
+        margin-bottom: 10px;
+      }
+      .btn {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 11px 14px;
+        cursor: pointer;
+      }
+      .result {
+        margin-top: 12px;
+        font-weight: 600;
+      }
+      .cta {
+        background: var(--dark);
+        color: #fff;
+        border-radius: 12px;
+        padding: 18px;
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+      .cta a {
+        color: #fff;
+        text-decoration: none;
+        background: #2d6ea1;
+        padding: 9px 12px;
+        border-radius: 8px;
+      }
+      footer {
+        text-align: center;
+        padding: 24px 16px;
+        color: #6a7684;
+        font-size: 14px;
+      }
+      @media (max-width: 760px) {
+        .calc-wrap { grid-template-columns: 1fr; }
+        .hero h1 { font-size: 28px; }
+        .showcase { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">Yildiz Deva Cam Balkon Sistemleri - Kesif ve teklif icin iletisime gecin</div>
+    <header class="hero">
+      <div class="container">
+        <h1>Cam Balkon ve Kapatma Sistemlerinde Guvenli Cozumler</h1>
+        <p>
+          Balkon, teras ve dis mekanlarinizi dort mevsim kullanilabilir hale getiren modern sistemler.
+          Urunleri inceleyin, metrekare hesaplamasi ile aninda tahmini fiyat gorun.
+        </p>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="section" id="showcaseSection">
+        <div class="showcase">
+          <div class="showcase-head">
+            <h2>Urunlerimiz ve Tamamladigimiz Isler</h2>
+            <div class="sub">
+            </div>
+          </div>
+          <div class="showcase-col">
+            <h3>Urunlerimiz</h3>
+            <div id="productList" class="grid"></div>
+          </div>
+          <div class="showcase-col" id="galleryCol" style="display:none;">
+            <h3>Islerimizden Kareler</h3>
+            <div class="carousel" id="galleryCarousel">
+              <div class="carousel-track-wrap">
+                <div class="carousel-track" id="galleryTrack"></div>
+              </div>
+              <div class="carousel-nav" id="galleryNav" style="display:none;">
+                <button type="button" class="carousel-btn" id="galleryPrev" aria-label="Onceki">‹</button>
+                <button type="button" class="carousel-btn" id="galleryNext" aria-label="Sonraki">›</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Tahmini Fiyat Hesaplama</h2>
+        <div class="calc-wrap">
+          <div class="card">
+            <select id="productSelect" class="field"></select>
+            <input id="width" class="field" type="number" step="0.1" placeholder="Genislik (metre)" />
+            <input id="height" class="field" type="number" step="0.1" placeholder="Yukseklik (metre)" />
+            <button id="calculateBtn" class="btn">Hesapla</button>
+            <div id="result" class="result"></div>
+          </div>
+          <div class="card">
+            <h3 class="product-title">Neler Sunuyoruz?</h3>
+            <p class="muted">Profesyonel montaj, uzun omurlu profil ve aksesuarlar, sade ve kullanisli sistemler.</p>
+            <ul class="muted">
+              <li>Yerinde kesif ve olculendirme</li>
+              <li>Urun tipine gore fiyatlandirma</li>
+              <li>Hizli montaj planlamasi</li>
+              <li>Destek ve satis sonrasi takip</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="cta">
+          <div>
+            <strong>Hizli iletisim</strong>
+            <div class="muted" style="color:#bfd2e4;">Olculerinizi paylasin, uygun sistem ve fiyat icin geri donelim.</div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a id="waLink" href="#" target="_blank" rel="noreferrer">WhatsApp Iletisim</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>© Yildiz Deva Cam Balkon Sistemleri</footer>
+
+    <script>
+      const productList = document.getElementById("productList");
+      const productSelect = document.getElementById("productSelect");
+      const result = document.getElementById("result");
+      const galleryCol = document.getElementById("galleryCol");
+      const galleryTrack = document.getElementById("galleryTrack");
+      const galleryNav = document.getElementById("galleryNav");
+      const galleryPrev = document.getElementById("galleryPrev");
+      const galleryNext = document.getElementById("galleryNext");
+
+      function escapeHtml(text) {
+        return String(text || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function productCard(product) {
+        const name = escapeHtml(product.name);
+        const desc = escapeHtml(product.description || "Aciklama bulunmuyor");
+        const price = escapeHtml(Number(product.price_per_m2).toFixed(2));
+        return (
+          "<article class='card'>" +
+            "<h3 class='product-title'>" + name + "</h3>" +
+            "<p class='muted'>" + desc + "</p>" +
+            "<strong>" + price + " TL / m2</strong>" +
+          "</article>"
+        );
+      }
+
+      async function loadProducts() {
+        const res = await fetch("/api/products");
+        const products = await res.json();
+
+        productList.innerHTML = "";
+        productSelect.innerHTML = "";
+
+        products.forEach((p) => {
+          productList.innerHTML += productCard(p);
+          const option = document.createElement("option");
+          option.value = p.id;
+          option.textContent = p.name + " (" + Number(p.price_per_m2).toFixed(2) + " TL/m2)";
+          productSelect.appendChild(option);
+        });
+      }
+
+      function updateGalleryNav() {
+        if (!galleryTrack || !galleryNav || galleryNav.style.display === "none") {
+          return;
+        }
+        const maxScroll = galleryTrack.scrollWidth - galleryTrack.clientWidth - 2;
+        galleryPrev.disabled = galleryTrack.scrollLeft <= 2;
+        galleryNext.disabled = galleryTrack.scrollLeft >= maxScroll;
+      }
+
+      if (galleryTrack) {
+        galleryTrack.addEventListener("scroll", updateGalleryNav);
+        window.addEventListener("resize", updateGalleryNav);
+      }
+
+      if (galleryPrev && galleryTrack) {
+        galleryPrev.addEventListener("click", () => {
+          galleryTrack.scrollBy({ left: -Math.max(240, galleryTrack.clientWidth * 0.75), behavior: "smooth" });
+        });
+      }
+      if (galleryNext && galleryTrack) {
+        galleryNext.addEventListener("click", () => {
+          galleryTrack.scrollBy({ left: Math.max(240, galleryTrack.clientWidth * 0.75), behavior: "smooth" });
+        });
+      }
+
+      async function loadGallery() {
+        if (!galleryTrack || !galleryCol || !galleryNav) {
+          return;
+        }
+        const res = await fetch("/api/gallery");
+        const items = await res.json();
+        galleryTrack.innerHTML = "";
+
+        if (!items.length) {
+          galleryCol.style.display = "none";
+          galleryNav.style.display = "none";
+          return;
+        }
+
+        galleryCol.style.display = "block";
+        galleryNav.style.display = items.length > 1 ? "flex" : "none";
+        items.forEach((item) => {
+          const slide = document.createElement("div");
+          slide.className = "carousel-slide";
+
+          const img = document.createElement("img");
+          img.loading = "lazy";
+          img.decoding = "async";
+          img.src = item.url;
+          img.alt = item.title || "Referans fotografi";
+
+          slide.appendChild(img);
+
+          if (item.title) {
+            const cap = document.createElement("div");
+            cap.className = "carousel-caption";
+            cap.textContent = item.title;
+            slide.appendChild(cap);
+          }
+
+          galleryTrack.appendChild(slide);
+        });
+        requestAnimationFrame(updateGalleryNav);
+      }
+
+      document.getElementById("calculateBtn").addEventListener("click", async () => {
+        const pid = productSelect.value, w = document.getElementById("width").value, h = document.getElementById("height").value;
+        if (!pid || !w || !h) { result.textContent = "Urun, genislik ve yukseklik giriniz"; return; }
+        try {
+          const res = await fetch(`/api/estimate?productId=${encodeURIComponent(pid)}&width=${encodeURIComponent(w)}&height=${encodeURIComponent(h)}`);
+          const data = await res.json();
+          result.textContent = res.ok ? `Alan: ${data.area.toFixed(2)} m2 | ${data.price_per_m2.toFixed(2)} TL/m2 = ${data.estimatedPrice.toFixed(2)} TL` : data.error || "Hesaplama yapilamadi";
+        } catch (e) { result.textContent = "Baglanti hatasi"; }
+      });
+
+      loadProducts();
+      loadGallery();
+
+      // WhatsApp numaranizi buraya yazin (basinda 90 olacak sekilde, bosluk yok)
+      const WHATSAPP_NUMBER = "905XXXXXXXXX";
+      const waLink = document.getElementById("waLink");
+      if (WHATSAPP_NUMBER.indexOf("X") === -1 && WHATSAPP_NUMBER.length > 4) {
+        waLink.href = "https://wa.me/" + WHATSAPP_NUMBER;
+      } else {
+        waLink.href = "https://wa.me/";
+      }
+    </script>
+  </body>
+</html>
