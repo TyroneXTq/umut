@@ -79,6 +79,15 @@ web_modules/
 .env.production.local
 .env.local
 
+# Database file (will be created at runtime)
+data.db
+data.db-shm
+data.db-wal
+
+# Uploads folder (generated at runtime)
+public/uploads/*
+!public/uploads/.gitkeep
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache

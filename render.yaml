@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: yildiz-deva
+    runtime: node
+    region: frankfurt
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: ADMIN_KEY
+        value: devadmin123
+        scope: run
