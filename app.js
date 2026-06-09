@@ -21,7 +21,7 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 app.use(express.json());
 
 app.get("/yonetim", (req, res) => {
-  res.sendFile(path.join(__dirname, "admin-panel.html"));
+  res.redirect("/");
 });
 
 app.get("/admin.html", (req, res) => {

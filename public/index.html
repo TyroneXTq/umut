@@ -198,7 +198,188 @@
         color: #6a7684;
         font-size: 14px;
       }
-      @media (max-width: 760px) {
+      .admin-btn {
+        position: fixed;
+        top: 14px;
+        right: 14px;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 12px;
+        z-index: 999;
+      }
+      .admin-btn:hover {
+        background: var(--dark);
+      }
+      .admin-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 1000;
+        overflow-y: auto;
+      }
+      .admin-modal.open {
+        display: block;
+      }
+      .admin-content {
+        background: #fff;
+        margin: 20px auto;
+        padding: 0;
+        border-radius: 12px;
+        max-width: 1000px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+      .admin-header {
+        background: var(--dark);
+        color: #fff;
+        padding: 18px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 12px 12px 0 0;
+      }
+      .admin-header h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .admin-close {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .admin-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+      }
+      .admin-body {
+        padding: 24px;
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+      .admin-section {
+        margin-bottom: 24px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid #e5e8eb;
+      }
+      .admin-section:last-child {
+        border-bottom: none;
+      }
+      .admin-section h3 {
+        margin: 0 0 12px;
+        color: var(--primary);
+        font-size: 16px;
+      }
+      .admin-item {
+        display: grid;
+        grid-template-columns: 1fr 1fr 0.8fr auto auto auto;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e5e8eb;
+      }
+      .admin-item:last-child {
+        border-bottom: none;
+      }
+      .admin-item input,
+      .admin-item button {
+        padding: 9px;
+        border: 1px solid #b8c2cc;
+        border-radius: 6px;
+        font-size: 13px;
+      }
+      .admin-item button {
+        background: var(--dark);
+        color: #fff;
+        cursor: pointer;
+        border: none;
+      }
+      .admin-item button.secondary {
+        background: #d04747;
+      }
+      .admin-item button:hover {
+        opacity: 0.9;
+      }
+      .status {
+        border: 1px solid #e6d4a3;
+        background: #fff7db;
+        color: #3b2f12;
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        line-height: 1.5;
+        margin-bottom: 12px;
+      }
+      .status.ok {
+        border-color: #bcd7c2;
+        background: #edf8f0;
+        color: #1f3a27;
+      }
+      .status.bad {
+        border-color: #e3b6b6;
+        background: #fdecec;
+        color: #5a1f1f;
+      }
+      .hidden {
+        display: none;
+      }
+      .gallery-scroller {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        scroll-snap-type: x mandatory;
+        margin-top: 10px;
+      }
+      .gallery-scroller::-webkit-scrollbar {
+        height: 6px;
+      }
+      .gallery-scroller::-webkit-scrollbar-thumb {
+        background: #c5ced8;
+        border-radius: 8px;
+      }
+      .gallery-tile {
+        flex: 0 0 150px;
+        scroll-snap-align: start;
+        border: 1px solid #e1e6eb;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f7f9fb;
+      }
+      .gallery-tile img {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        display: block;
+      }
+      .gallery-meta {
+        padding: 6px;
+        font-size: 11px;
+        color: #4b5563;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .gallery-tile button {
+        width: 100%;
+        border-radius: 0;
+        font-size: 12px;
+        padding: 6px 0;
+      }
+      @media (max-width: 900px) {
+        .admin-item { grid-template-columns: 1fr; }
         .calc-wrap { grid-template-columns: 1fr; }
         .hero h1 { font-size: 28px; }
         .showcase { grid-template-columns: 1fr; }
@@ -207,6 +388,45 @@
   </head>
   <body>
     <div class="topbar">Yildiz Deva Cam Balkon Sistemleri - Kesif ve teklif icin iletisime gecin</div>
+    
+    <button class="admin-btn" id="adminOpenBtn">⚙️ Admin</button>
+
+    <div class="admin-modal" id="adminModal">
+      <div class="admin-content">
+        <div class="admin-header">
+          <h2>Admin Panel</h2>
+          <button class="admin-close" id="adminCloseBtn">✕</button>
+        </div>
+        <div class="admin-body">
+          <div id="serverStatus" class="status hidden"></div>
+
+          <div class="admin-section">
+            <h3>📦 Yeni Urun Ekle</h3>
+            <div class="admin-item" style="border-bottom: none;">
+              <input id="newName" type="text" placeholder="Urun adi" />
+              <input id="newDescription" type="text" placeholder="Aciklama" />
+              <input id="newPrice" type="number" step="0.1" placeholder="m2 fiyati (TL)" />
+              <button id="addProductBtn" style="grid-column: span 2;">Urun Ekle</button>
+            </div>
+          </div>
+
+          <div class="admin-section">
+            <h3>💰 Urun Fiyatlari</h3>
+            <div id="adminList"></div>
+          </div>
+
+          <div class="admin-section">
+            <h3>🖼️ Ana Sayfa Galerisi</h3>
+            <div class="admin-item" style="border-bottom: none;">
+              <input id="galleryTitle" type="text" placeholder="Baslik (istege bagli)" />
+              <input id="galleryFile" type="file" accept="image/*" />
+              <button id="galleryUploadBtn" style="grid-column: span 3;">Fotograf Yukle</button>
+            </div>
+            <div id="galleryAdminList" class="gallery-scroller"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <header class="hero">
       <div class="container">
         <h1>Cam Balkon ve Kapatma Sistemlerinde Guvenli Cozumler</h1>
@@ -416,6 +636,352 @@
       } else {
         waLink.href = "https://wa.me/";
       }
+
+      // ========== ADMIN PANEL ==========
+      const adminModal = document.getElementById("adminModal");
+      const adminOpenBtn = document.getElementById("adminOpenBtn");
+      const adminCloseBtn = document.getElementById("adminCloseBtn");
+      const adminList = document.getElementById("adminList");
+      const addProductBtn = document.getElementById("addProductBtn");
+      const galleryAdminList = document.getElementById("galleryAdminList");
+      const galleryUploadBtn = document.getElementById("galleryUploadBtn");
+      const serverStatus = document.getElementById("serverStatus");
+
+      adminOpenBtn.addEventListener("click", () => {
+        adminModal.classList.add("open");
+        checkServer();
+        loadProducts();
+        loadGalleryAdmin();
+      });
+
+      adminCloseBtn.addEventListener("click", () => {
+        adminModal.classList.remove("open");
+      });
+
+      adminModal.addEventListener("click", (e) => {
+        if (e.target === adminModal) {
+          adminModal.classList.remove("open");
+        }
+      });
+
+      function esc(t) { 
+        return String(t || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); 
+      }
+
+      function getAdminKey() { 
+        return localStorage.getItem("adminKey") || ""; 
+      }
+
+      function ensureAdminKey() {
+        let key = getAdminKey();
+        if (key) {
+          return key;
+        }
+        key = window.prompt("Admin anahtarini girin (sunucudaki ADMIN_KEY ile ayni olmali)");
+        if (!key) {
+          return "";
+        }
+        localStorage.setItem("adminKey", key);
+        return key;
+      }
+
+      async function adminFetch(url, options) {
+        const key = ensureAdminKey();
+        const opts = options || {};
+        const headers = new Headers();
+
+        if (opts.headers instanceof Headers) {
+          opts.headers.forEach((value, name) => {
+            headers.set(name, value);
+          });
+        } else if (opts.headers && typeof opts.headers === "object") {
+          Object.keys(opts.headers).forEach((name) => {
+            headers.set(name, opts.headers[name]);
+          });
+        }
+
+        if (opts.body instanceof FormData) {
+          headers.delete("content-type");
+        } else if (opts.body && !headers.has("Content-Type")) {
+          headers.set("Content-Type", "application/json");
+        }
+
+        headers.set("x-admin-key", key);
+        const res = await fetch(url, Object.assign({}, opts, { headers }));
+        if (res.status === 401) {
+          const useNew = confirm("Admin anahtari yanlis olabilir. Yeni anahtar girmek ister misiniz?");
+          if (useNew) {
+            localStorage.removeItem("adminKey");
+          }
+        }
+        return res;
+      }
+
+      async function checkServer() {
+        if (!serverStatus) {
+          return;
+        }
+        serverStatus.style.display = "block";
+
+        try {
+          const res = await fetch("/api/health");
+          if (res.ok) {
+            const data = await res.json();
+            serverStatus.className = "status ok";
+            serverStatus.innerHTML =
+              "<strong>✓ Sunucu OK</strong><br>" +
+              "Build: " + data.build +
+              "<br>Galeri API: aktif";
+            return;
+          }
+        } catch (e) {
+          // fall through
+        }
+
+        serverStatus.className = "status bad";
+        serverStatus.innerHTML =
+          "<strong>✗ Sunucuya baglanilamadi</strong>";
+      }
+
+      async function loadProductsAdmin() {
+        const res = await fetch("/api/products");
+        const products = await res.json();
+        adminList.innerHTML = "";
+
+        products.forEach((p) => {
+          const row = document.createElement("div");
+          row.className = "admin-item";
+
+          const nameInput = document.createElement("input");
+          nameInput.type = "text";
+          nameInput.id = "name-" + p.id;
+          nameInput.value = p.name || "";
+
+          const descInput = document.createElement("input");
+          descInput.type = "text";
+          descInput.id = "desc-" + p.id;
+          descInput.value = p.description || "";
+
+          const priceInput = document.createElement("input");
+          priceInput.type = "number";
+          priceInput.step = "0.1";
+          priceInput.id = "price-" + p.id;
+          priceInput.value = Number(p.price_per_m2).toFixed(2);
+
+          const copyBtn = document.createElement("button");
+          copyBtn.type = "button";
+          copyBtn.title = "Bilgileri kopyala";
+          copyBtn.innerHTML = "📋";
+          copyBtn.style.minWidth = "40px";
+          copyBtn.addEventListener("click", () => {
+            const text = p.name + " - " + Number(p.price_per_m2).toFixed(2) + " TL/m2";
+            navigator.clipboard.writeText(text).then(() => {
+              copyBtn.innerHTML = "✓";
+              setTimeout(() => { copyBtn.innerHTML = "📋"; }, 1500);
+            });
+          });
+
+          const saveBtn = document.createElement("button");
+          saveBtn.type = "button";
+          saveBtn.dataset.id = String(p.id);
+          saveBtn.dataset.action = "save";
+          saveBtn.textContent = "Kaydet";
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.type = "button";
+          deleteBtn.className = "secondary";
+          deleteBtn.dataset.id = String(p.id);
+          deleteBtn.dataset.action = "delete";
+          deleteBtn.textContent = "Sil";
+
+          row.appendChild(nameInput);
+          row.appendChild(descInput);
+          row.appendChild(priceInput);
+          row.appendChild(copyBtn);
+          row.appendChild(saveBtn);
+          row.appendChild(deleteBtn);
+          adminList.appendChild(row);
+        });
+
+        document.querySelectorAll("#adminList button[data-id][data-action]").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const id = btn.getAttribute("data-id");
+            const action = btn.getAttribute("data-action");
+
+            if (action === "delete") {
+              const approved = confirm("Bu urunu silmek istiyor musunuz?");
+              if (!approved) {
+                return;
+              }
+              const resDelete = await adminFetch("/api/products/" + id, { method: "DELETE" });
+              const deleteData = await resDelete.json();
+              if (!resDelete.ok) {
+                alert(deleteData.error || "Silme basarisiz");
+                return;
+              }
+              alert("Urun silindi");
+              loadProductsAdmin();
+              loadProducts();
+              return;
+            }
+
+            const name = document.getElementById("name-" + id).value.trim();
+            const description = document.getElementById("desc-" + id).value.trim();
+            const price = Number(document.getElementById("price-" + id).value);
+
+            const resUpdate = await adminFetch("/api/products/" + id, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, description, price_per_m2: price }),
+            });
+
+            const data = await resUpdate.json();
+            if (!resUpdate.ok) {
+              alert(data.error || "Guncelleme basarisiz");
+              return;
+            }
+
+            alert("Urun bilgileri guncellendi");
+            loadProductsAdmin();
+            loadProducts();
+          });
+        });
+      }
+
+      async function loadGalleryAdmin() {
+        const res = await fetch("/api/gallery");
+        const items = await res.json();
+        galleryAdminList.innerHTML = "";
+        items.forEach((item) => {
+          const tile = document.createElement("div");
+          tile.className = "gallery-tile";
+          
+          const img = document.createElement("img");
+          img.loading = "lazy";
+          img.src = esc(item.url);
+          img.alt = esc(item.title || "Galeri");
+          
+          const meta = document.createElement("div");
+          meta.className = "gallery-meta";
+          meta.textContent = esc(item.title || "Baslik yok");
+
+          const btnContainer = document.createElement("div");
+          btnContainer.style.display = "flex";
+          btnContainer.style.gap = "4px";
+
+          const copyBtn = document.createElement("button");
+          copyBtn.type = "button";
+          copyBtn.title = "URL'yi kopyala";
+          copyBtn.innerHTML = "📋";
+          copyBtn.style.flex = "1";
+          copyBtn.style.fontSize = "12px";
+          copyBtn.style.padding = "6px 0";
+          copyBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(item.url).then(() => {
+              copyBtn.innerHTML = "✓";
+              setTimeout(() => { copyBtn.innerHTML = "📋"; }, 1500);
+            });
+          });
+
+          const delBtn = document.createElement("button");
+          delBtn.type = "button";
+          delBtn.className = "secondary";
+          delBtn.textContent = "Sil";
+          delBtn.style.flex = "1";
+          delBtn.style.fontSize = "12px";
+          delBtn.style.padding = "6px 0";
+          delBtn.addEventListener("click", async () => {
+            const ok = confirm("Bu fotografi silmek istiyor musunuz?");
+            if (!ok) {
+              return;
+            }
+            const resDelete = await adminFetch("/api/gallery/" + item.id, { method: "DELETE" });
+            const data = await resDelete.json();
+            if (!resDelete.ok) {
+              alert(data.error || "Silinemedi");
+              return;
+            }
+            loadGalleryAdmin();
+            loadGallery();
+          });
+
+          btnContainer.appendChild(copyBtn);
+          btnContainer.appendChild(delBtn);
+
+          tile.appendChild(img);
+          tile.appendChild(meta);
+          tile.appendChild(btnContainer);
+          galleryAdminList.appendChild(tile);
+        });
+      }
+
+      async function readApiError(res) {
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          return { error: text || "Bilinmeyen hata" };
+        }
+      }
+
+      galleryUploadBtn.addEventListener("click", async () => {
+        const fileInput = document.getElementById("galleryFile");
+        const title = document.getElementById("galleryTitle").value.trim();
+        if (!fileInput.files || !fileInput.files[0]) {
+          alert("Once bir dosya secin");
+          return;
+        }
+
+        const form = new FormData();
+        form.append("photo", fileInput.files[0]);
+        form.append("title", title);
+
+        const res = await adminFetch("/api/gallery", {
+          method: "POST",
+          body: form,
+        });
+
+        const data = res.ok ? await res.json() : await readApiError(res);
+        if (!res.ok) {
+          alert(data.error || "Yukleme basarisiz");
+          return;
+        }
+
+        fileInput.value = "";
+        document.getElementById("galleryTitle").value = "";
+        loadGalleryAdmin();
+        loadGallery();
+      });
+
+      addProductBtn.addEventListener("click", async () => {
+        const name = document.getElementById("newName").value.trim();
+        const description = document.getElementById("newDescription").value.trim();
+        const price = Number(document.getElementById("newPrice").value);
+
+        const res = await adminFetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            description,
+            price_per_m2: price,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || "Urun eklenemedi");
+          return;
+        }
+
+        alert("Yeni urun eklendi");
+        document.getElementById("newName").value = "";
+        document.getElementById("newDescription").value = "";
+        document.getElementById("newPrice").value = "";
+        loadProductsAdmin();
+        loadProducts();
+      });
     </script>
   </body>
 </html>
