@@ -9,7 +9,10 @@ const PORT = Number(process.env.PORT || 3000);
 const APP_BUILD = "2026-05-04";
 
 const ADMIN_KEY = process.env.ADMIN_KEY || "devadmin123";
-const UPLOAD_DIR = path.join(__dirname, "public", "uploads");
+
+// Render'da persistent depolama için /data, local'de public/uploads kullan
+const DATA_DIR = fs.existsSync("/data") ? "/data" : path.join(__dirname, "public");
+const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
 
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -77,7 +80,8 @@ const upload = multer({
 app.use("/uploads", express.static(UPLOAD_DIR));
 app.use(express.static(path.join(__dirname, "public")));
 
-const db = new sqlite3.Database(path.join(__dirname, "data.db"));
+const DB_PATH = path.join(DATA_DIR, "data.db");
+const db = new sqlite3.Database(DB_PATH);
 
 db.serialize(() => {
   db.run(`

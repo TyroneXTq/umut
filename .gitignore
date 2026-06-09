@@ -83,6 +83,7 @@ web_modules/
 data.db
 data.db-shm
 data.db-wal
+/data
 
 # Uploads folder (generated at runtime)
 public/uploads/*
