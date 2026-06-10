@@ -9,6 +9,8 @@ const PORT = Number(process.env.PORT || 3000);
 const APP_BUILD = "2026-05-04";
 
 const ADMIN_KEY = process.env.ADMIN_KEY || "devadmin123";
+const ADMIN_USER = process.env.ADMIN_USER || "admin";
+const ADMIN_PASS = process.env.ADMIN_PASS || "sifre123";
 
 // Render'da persistent depolama için /data, local'de public/uploads kullan
 const DATA_DIR = fs.existsSync("/data") ? "/data" : path.join(__dirname, "public");
@@ -33,16 +35,27 @@ app.get("/api/health", (req, res) => {
     ok: true,
     build: APP_BUILD,
     gallery: true,
-    adminKeyConfigured: Boolean(process.env.ADMIN_KEY),
+    auth: {
+      method: process.env.ADMIN_USER && process.env.ADMIN_PASS ? "user-pass" : "key",
+      adminUser: ADMIN_USER,
+    },
   });
 });
 
-function requireAdminKey(req, res, next) {
-  const key = req.header("x-admin-key");
-  if (!key || key !== ADMIN_KEY) {
-    return res.status(401).json({ error: "Yetkisiz" });
+function requireAdminAuth(req, res, next) {
+  const user = req.header("x-admin-user") || "";
+  const pass = req.header("x-admin-pass") || "";
+  const key = req.header("x-admin-key") || "";
+
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+    return next();
   }
-  next();
+
+  if (key && key === ADMIN_KEY) {
+    return next();
+  }
+
+  return res.status(401).json({ error: "Yetkisiz" });
 }
 
 const storage = multer.diskStorage({
@@ -98,6 +111,17 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT,
       filename TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS appointments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      first_name TEXT NOT NULL,
+      last_name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      address TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
@@ -196,7 +220,59 @@ app.get("/api/products", (req, res) => {
   });
 });
 
-app.post("/api/products", requireAdminKey, (req, res) => {
+app.get("/api/appointments", requireAdminAuth, (req, res) => {
+  db.all("SELECT * FROM appointments ORDER BY id DESC", [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: "Randevular alinamadi" });
+    }
+    res.json(rows);
+  });
+});
+
+app.post("/api/appointments", (req, res) => {
+  const firstName = String(req.body.first_name || "").trim();
+  const lastName = String(req.body.last_name || "").trim();
+  const phone = String(req.body.phone || "").trim();
+  const address = String(req.body.address || "").trim();
+
+  if (!firstName || !lastName || !phone || !address) {
+    return res.status(400).json({ error: "Lutfen isim, telefon ve adres bilgilerini eksiksiz giriniz" });
+  }
+
+  db.run(
+    "INSERT INTO appointments (first_name, last_name, phone, address) VALUES (?, ?, ?, ?)",
+    [firstName, lastName, phone, address],
+    function onInsert(err) {
+      if (err) {
+        return res.status(500).json({ error: "Randevu kaydedilemedi" });
+      }
+      res.status(201).json({ success: true, id: this.lastID });
+    }
+  );
+});
+
+app.delete("/api/appointments/:id", requireAdminAuth, (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) {
+    return res.status(400).json({ error: "Gecersiz randevu" });
+  }
+
+  db.run("DELETE FROM appointments WHERE id = ?", [id], function (err) {
+    if (err) {
+      return res.status(500).json({ error: "Randevu silinemedi" });
+    }
+    if (this.changes === 0) {
+      return res.status(404).json({ error: "Randevu bulunamadi" });
+    }
+    res.json({ success: true });
+  });
+});
+
+app.get("/api/admin/check", requireAdminAuth, (req, res) => {
+  res.json({ ok: true, user: ADMIN_USER });
+});
+
+app.post("/api/products", requireAdminAuth, (req, res) => {
   const name = (req.body.name || "").trim();
   const description = (req.body.description || "").trim();
   const price = Number(req.body.price_per_m2);

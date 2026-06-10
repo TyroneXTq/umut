@@ -401,28 +401,46 @@
           <div id="serverStatus" class="status hidden"></div>
 
           <div class="admin-section">
-            <h3>📦 Yeni Urun Ekle</h3>
-            <div class="admin-item" style="border-bottom: none;">
-              <input id="newName" type="text" placeholder="Urun adi" />
-              <input id="newDescription" type="text" placeholder="Aciklama" />
-              <input id="newPrice" type="number" step="0.1" placeholder="m2 fiyati (TL)" />
-              <button id="addProductBtn" style="grid-column: span 2;">Urun Ekle</button>
+            <h3>� Admin Girişi</h3>
+            <div class="admin-item" style="border-bottom:none;">
+              <input id="adminUser" type="text" placeholder="Kullanıcı adı" />
+              <input id="adminPass" type="password" placeholder="Şifre" />
+              <button id="adminLoginBtn" style="grid-column: span 2;">Giriş Yap</button>
+              <button id="adminLogoutBtn" type="button" class="secondary hidden" style="grid-column: span 2;">Çıkış Yap</button>
             </div>
+            <div id="adminLoginStatus" class="status hidden"></div>
           </div>
 
-          <div class="admin-section">
-            <h3>💰 Urun Fiyatlari</h3>
-            <div id="adminList"></div>
-          </div>
-
-          <div class="admin-section">
-            <h3>🖼️ Ana Sayfa Galerisi</h3>
-            <div class="admin-item" style="border-bottom: none;">
-              <input id="galleryTitle" type="text" placeholder="Baslik (istege bagli)" />
-              <input id="galleryFile" type="file" accept="image/*" />
-              <button id="galleryUploadBtn" style="grid-column: span 3;">Fotograf Yukle</button>
+          <div id="adminProtectedSections" class="hidden">
+            <div class="admin-section">
+              <h3>📦 Yeni Urun Ekle</h3>
+              <div class="admin-item" style="border-bottom: none;">
+                <input id="newName" type="text" placeholder="Urun adi" />
+                <input id="newDescription" type="text" placeholder="Aciklama" />
+                <input id="newPrice" type="number" step="0.1" placeholder="m2 fiyati (TL)" />
+                <button id="addProductBtn" style="grid-column: span 2;">Urun Ekle</button>
+              </div>
             </div>
-            <div id="galleryAdminList" class="gallery-scroller"></div>
+
+            <div class="admin-section">
+              <h3>💰 Urun Fiyatlari</h3>
+              <div id="adminList"></div>
+            </div>
+
+            <div class="admin-section">
+              <h3>🖼️ Ana Sayfa Galerisi</h3>
+              <div class="admin-item" style="border-bottom: none;">
+                <input id="galleryTitle" type="text" placeholder="Baslik (istege bagli)" />
+                <input id="galleryFile" type="file" accept="image/*" />
+                <button id="galleryUploadBtn" style="grid-column: span 3;">Fotograf Yukle</button>
+              </div>
+              <div id="galleryAdminList" class="gallery-scroller"></div>
+            </div>
+
+            <div class="admin-section">
+              <h3>📅 Ölçü Randevu Talepleri</h3>
+              <div id="appointmentList"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -495,6 +513,7 @@
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <a id="waLink" href="#" target="_blank" rel="noreferrer">WhatsApp Iletisim</a>
+            <a href="/randevu.html">Ölçü Randevu Talep Et</a>
           </div>
         </div>
       </section>
@@ -647,15 +666,38 @@
       const galleryUploadBtn = document.getElementById("galleryUploadBtn");
       const serverStatus = document.getElementById("serverStatus");
 
-      adminOpenBtn.addEventListener("click", () => {
+      adminOpenBtn.addEventListener("click", async () => {
         adminModal.classList.add("open");
         checkServer();
-        loadProducts();
-        loadGalleryAdmin();
+        await loadProducts();
+        const isAuthenticated = Boolean(getAdminUser() && getAdminPass());
+        updateAdminVisibility(isAuthenticated);
+        if (isAuthenticated) {
+          await loadProductsAdmin();
+          await loadGalleryAdmin();
+          await loadAppointmentsAdmin();
+        }
       });
 
       adminCloseBtn.addEventListener("click", () => {
         adminModal.classList.remove("open");
+      });
+
+      document.getElementById("adminLoginBtn").addEventListener("click", async () => {
+        const user = document.getElementById("adminUser").value.trim();
+        const pass = document.getElementById("adminPass").value.trim();
+        if (!user || !pass) {
+          const status = document.getElementById("adminLoginStatus");
+          status.className = "status bad";
+          status.textContent = "Kullanıcı adı ve şifre doldurulmalı.";
+          status.classList.remove("hidden");
+          return;
+        }
+        await loginAdmin(user, pass);
+      });
+
+      document.getElementById("adminLogoutBtn").addEventListener("click", () => {
+        logoutAdmin();
       });
 
       adminModal.addEventListener("click", (e) => {
@@ -664,31 +706,141 @@
         }
       });
 
+      function getAdminUser() {
+        return localStorage.getItem("adminUser") || "";
+      }
+
+      function getAdminPass() {
+        return localStorage.getItem("adminPass") || "";
+      }
+
+      function getAdminKey() {
+        return localStorage.getItem("adminKey") || "";
+      }
+
+      function storeAdminCredentials(user, pass) {
+        localStorage.setItem("adminUser", user);
+        localStorage.setItem("adminPass", pass);
+      }
+
+      function clearAdminCredentials() {
+        localStorage.removeItem("adminUser");
+        localStorage.removeItem("adminPass");
+      }
+
+      function updateAdminVisibility(isAuthenticated) {
+        const protectedSections = document.getElementById("adminProtectedSections");
+        const logoutBtn = document.getElementById("adminLogoutBtn");
+        const loginBtn = document.getElementById("adminLoginBtn");
+        const status = document.getElementById("adminLoginStatus");
+
+        if (isAuthenticated) {
+          protectedSections.classList.remove("hidden");
+          logoutBtn.classList.remove("hidden");
+          loginBtn.textContent = "Yetki Devam Ediyor";
+          loginBtn.disabled = true;
+          status.className = "status ok";
+          status.textContent = "Admin girişi başarılı. Yönetici araçları açık.";
+          status.classList.remove("hidden");
+          return;
+        }
+
+        protectedSections.classList.add("hidden");
+        logoutBtn.classList.add("hidden");
+        loginBtn.textContent = "Giriş Yap";
+        loginBtn.disabled = false;
+        status.classList.add("hidden");
+        status.textContent = "";
+      }
+
+      async function verifyAdminCredentials(user, pass) {
+        try {
+          const res = await fetch("/api/admin/check", {
+            headers: {
+              "x-admin-user": user,
+              "x-admin-pass": pass,
+            },
+          });
+          return res.ok;
+        } catch (error) {
+          return false;
+        }
+      }
+
+      async function loginAdmin(user, pass) {
+        const ok = await verifyAdminCredentials(user, pass);
+        if (!ok) {
+          const status = document.getElementById("adminLoginStatus");
+          status.className = "status bad";
+          status.textContent = "Kullanıcı adı veya şifre hatalı.";
+          status.classList.remove("hidden");
+          return false;
+        }
+
+        storeAdminCredentials(user, pass);
+        updateAdminVisibility(true);
+        await loadProductsAdmin();
+        await loadGalleryAdmin();
+        await loadAppointmentsAdmin();
+        return true;
+      }
+
+      function logoutAdmin() {
+        clearAdminCredentials();
+        updateAdminVisibility(false);
+      }
+
+      async function ensureAdminAuth() {
+        let user = getAdminUser();
+        let pass = getAdminPass();
+        if (user && pass) {
+          return { user, pass };
+        }
+
+        user = window.prompt("Admin kullanıcı adını girin:");
+        if (!user) {
+          return null;
+        }
+        pass = window.prompt("Admin şifresini girin:");
+        if (!pass) {
+          return null;
+        }
+        storeAdminCredentials(user, pass);
+        return { user, pass };
+      }
+
       function esc(t) { 
-        return String(t || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); 
-      }
-
-      function getAdminKey() { 
-        return localStorage.getItem("adminKey") || ""; 
-      }
-
-      function ensureAdminKey() {
-        let key = getAdminKey();
-        if (key) {
-          return key;
-        }
-        key = window.prompt("Admin anahtarini girin (sunucudaki ADMIN_KEY ile ayni olmali)");
-        if (!key) {
-          return "";
-        }
-        localStorage.setItem("adminKey", key);
-        return key;
+        return String(t || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;"); 
       }
 
       async function adminFetch(url, options) {
-        const key = ensureAdminKey();
+        const auth = await ensureAdminAuth();
         const opts = options || {};
         const headers = new Headers();
+
+        if (!opts.headers) {
+          opts.headers = {};
+        }
+
+        if (opts.headers instanceof Headers) {
+          opts.headers.forEach((value, name) => {
+            headers.set(name, value);
+          });
+        } else if (opts.headers && typeof opts.headers === "object") {
+          Object.keys(opts.headers).forEach((name) => {
+            headers.set(name, opts.headers[name]);
+          });
+        }
+
+        if (auth) {
+          headers.set("x-admin-user", auth.user);
+          headers.set("x-admin-pass", auth.pass);
+        }
+
+        const key = getAdminKey();
+        if (key) {
+          headers.set("x-admin-key", key);
+        }
 
         if (opts.headers instanceof Headers) {
           opts.headers.forEach((value, name) => {
@@ -706,11 +858,11 @@
           headers.set("Content-Type", "application/json");
         }
 
-        headers.set("x-admin-key", key);
         const res = await fetch(url, Object.assign({}, opts, { headers }));
         if (res.status === 401) {
-          const useNew = confirm("Admin anahtari yanlis olabilir. Yeni anahtar girmek ister misiniz?");
+          const useNew = confirm("Admin bilgileri yanlis olabilir. Yine de yeni bilgiler girmek ister misiniz?");
           if (useNew) {
+            clearAdminCredentials();
             localStorage.removeItem("adminKey");
           }
         }
@@ -913,6 +1065,73 @@
           tile.appendChild(meta);
           tile.appendChild(btnContainer);
           galleryAdminList.appendChild(tile);
+        });
+      }
+
+      async function loadAppointmentsAdmin() {
+        const list = document.getElementById("appointmentList");
+        list.innerHTML = "";
+
+        const res = await adminFetch("/api/appointments");
+        const data = res.ok ? await res.json() : await readApiError(res);
+        if (!res.ok) {
+          list.innerHTML = "<div class='status bad'>Randevular yüklenemedi: " + esc(data.error || "Hata") + "</div>";
+          return;
+        }
+
+        if (!data.length) {
+          list.innerHTML = "<div class='status'>Henüz randevu talebi yok.</div>";
+          return;
+        }
+
+        data.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "admin-item";
+
+          const nameField = document.createElement("input");
+          nameField.type = "text";
+          nameField.value = esc(item.first_name + " " + item.last_name);
+          nameField.disabled = true;
+
+          const phoneField = document.createElement("input");
+          phoneField.type = "text";
+          phoneField.value = esc(item.phone);
+          phoneField.disabled = true;
+
+          const addressField = document.createElement("input");
+          addressField.type = "text";
+          addressField.value = esc(item.address);
+          addressField.disabled = true;
+
+          const dateField = document.createElement("button");
+          dateField.type = "button";
+          dateField.textContent = new Date(item.created_at).toLocaleString("tr-TR");
+          dateField.disabled = true;
+          dateField.style.flex = "1";
+          dateField.style.cursor = "default";
+
+          const deleteButton = document.createElement("button");
+          deleteButton.type = "button";
+          deleteButton.className = "secondary";
+          deleteButton.textContent = "Sil";
+          deleteButton.addEventListener("click", async () => {
+            const ok = confirm("Bu randevuyu silmek istiyor musunuz?");
+            if (!ok) return;
+            const resDelete = await adminFetch("/api/appointments/" + item.id, { method: "DELETE" });
+            const result = resDelete.ok ? await resDelete.json() : await readApiError(resDelete);
+            if (!resDelete.ok) {
+              alert(result.error || "Randevu silinemedi");
+              return;
+            }
+            await loadAppointmentsAdmin();
+          });
+
+          row.appendChild(nameField);
+          row.appendChild(phoneField);
+          row.appendChild(addressField);
+          row.appendChild(dateField);
+          row.appendChild(deleteButton);
+          list.appendChild(row);
         });
       }
 

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ölçü Randevu Talebi - Yildiz Deva</title>
+    <style>
+      :root {
+        --primary: #0f3d66;
+        --dark: #102132;
+        --light: #f2f5f9;
+        --text: #202833;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: var(--light);
+        color: var(--text);
+      }
+      .page-header {
+        background: linear-gradient(135deg, var(--primary), #1f5f91);
+        color: #fff;
+        padding: 38px 16px;
+        text-align: center;
+      }
+      .page-header h1 {
+        margin: 0 0 8px;
+        font-size: 32px;
+      }
+      .page-header p {
+        margin: 0;
+        opacity: 0.9;
+      }
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 24px 16px 40px;
+      }
+      .card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 24px;
+        box-shadow: 0 14px 40px rgba(16, 33, 50, 0.1);
+      }
+      .field,
+      .textarea {
+        width: 100%;
+        border: 1px solid #ccd5df;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 14px;
+        font-size: 15px;
+        color: var(--text);
+        background: #fff;
+      }
+      .textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+      .btn {
+        width: 100%;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 14px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .btn:hover {
+        opacity: 0.95;
+      }
+      .result {
+        margin-top: 16px;
+        font-weight: 600;
+      }
+      .footer {
+        text-align: center;
+        color: #5b6775;
+        margin-top: 24px;
+        font-size: 14px;
+      }
+      a.back-link {
+        display: inline-block;
+        margin-bottom: 18px;
+        color: var(--dark);
+        text-decoration: none;
+        border: 1px solid rgba(16,33,50,.12);
+        padding: 10px 16px;
+        border-radius: 10px;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page-header">
+      <div class="container">
+        <h1>Ölçü Randevu Talebi</h1>
+        <p>Size en kısa sürede dönüş yapabilmemiz için randevu bilgilerinizle talep gönderin.</p>
+      </div>
+    </header>
+    <main class="container">
+      <a class="back-link" href="/">← Ana Sayfaya Dön</a>
+      <div class="card">
+        <label>
+          <input id="firstName" class="field" type="text" placeholder="İsim" />
+        </label>
+        <label>
+          <input id="lastName" class="field" type="text" placeholder="Soyisim" />
+        </label>
+        <label>
+          <input id="phone" class="field" type="tel" placeholder="Telefon numarası" />
+        </label>
+        <label>
+          <textarea id="address" class="textarea" placeholder="Adres"></textarea>
+        </label>
+        <button id="appointmentSubmitBtn" class="btn">Randevu Talep Et</button>
+        <div id="appointmentResult" class="result"></div>
+      </div>
+      <div class="footer">Yildiz Deva Cam Balkon Sistemleri</div>
+    </main>
+    <script>
+      const appointmentSubmitBtn = document.getElementById("appointmentSubmitBtn");
+      const firstNameInput = document.getElementById("firstName");
+      const lastNameInput = document.getElementById("lastName");
+      const phoneInput = document.getElementById("phone");
+      const addressInput = document.getElementById("address");
+      const appointmentResult = document.getElementById("appointmentResult");
+
+      function escapeText(value) {
+        return String(value || "").trim();
+      }
+
+      appointmentSubmitBtn.addEventListener("click", async () => {
+        const firstName = escapeText(firstNameInput.value);
+        const lastName = escapeText(lastNameInput.value);
+        const phone = escapeText(phoneInput.value);
+        const address = escapeText(addressInput.value);
+
+        if (!firstName || !lastName || !phone || !address) {
+          appointmentResult.textContent = "Lütfen tüm alanları doldurun.";
+          appointmentResult.style.color = "#b22222";
+          return;
+        }
+
+        appointmentResult.textContent = "Gönderiliyor...";
+        appointmentResult.style.color = "#0f3d66";
+
+        try {
+          const response = await fetch("/api/appointments", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              first_name: firstName,
+              last_name: lastName,
+              phone,
+              address,
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok) {
+            appointmentResult.textContent = data.error || "Randevu kaydedilemedi.";
+            appointmentResult.style.color = "#b22222";
+            return;
+          }
+
+          appointmentResult.textContent = "Randevu talebiniz alındı. En kısa sürede sizinle iletişime geçeceğiz.";
+          appointmentResult.style.color = "#1f5a2f";
+          firstNameInput.value = "";
+          lastNameInput.value = "";
+          phoneInput.value = "";
+          addressInput.value = "";
+        } catch (error) {
+          appointmentResult.textContent = "Sunucuya bağlanılamadı. Lütfen tekrar deneyin.";
+          appointmentResult.style.color = "#b22222";
+        }
+      });
+    </script>
+  </body>
+</html>
