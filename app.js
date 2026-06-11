@@ -230,6 +230,29 @@ app.get("/api/products", (req, res) => {
   });
 });
 
+const APPOINTMENT_START_HOUR = 9;
+const APPOINTMENT_END_HOUR = 19;
+const VALID_TIME_SLOTS = (() => {
+  const slots = [];
+  for (let hour = APPOINTMENT_START_HOUR; hour <= APPOINTMENT_END_HOUR; hour++) {
+    slots.push(String(hour).padStart(2, "0") + ":00");
+    if (hour < APPOINTMENT_END_HOUR) {
+      slots.push(String(hour).padStart(2, "0") + ":30");
+    }
+  }
+  return slots;
+})();
+
+function isSundayDate(dateStr) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.getDay() === 0;
+}
+
+function isValidAppointmentTime(timeStr) {
+  return VALID_TIME_SLOTS.includes(timeStr);
+}
+
 app.get("/api/appointments", requireAdminAuth, (req, res) => {
   db.all("SELECT * FROM appointments ORDER BY id DESC", [], (err, rows) => {
     if (err) {
@@ -237,6 +260,45 @@ app.get("/api/appointments", requireAdminAuth, (req, res) => {
     }
     res.json(rows);
   });
+});
+
+app.get("/api/appointments/availability", (req, res) => {
+  const appointmentDate = String(req.query.date || "").trim();
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(appointmentDate)) {
+    return res.status(400).json({ error: "Gecerli bir tarih giriniz." });
+  }
+
+  if (isSundayDate(appointmentDate)) {
+    return res.json({
+      date: appointmentDate,
+      closed: true,
+      reason: "Pazar gunleri randevu alinmamaktadir.",
+      booked_times: [],
+      available_times: [],
+    });
+  }
+
+  db.all(
+    "SELECT appointment_time FROM appointments WHERE appointment_date = ?",
+    [appointmentDate],
+    (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: "Musaitlik bilgisi alinamadi" });
+      }
+
+      const bookedTimes = rows.map((row) => row.appointment_time);
+      const availableTimes = VALID_TIME_SLOTS.filter((slot) => !bookedTimes.includes(slot));
+
+      res.json({
+        date: appointmentDate,
+        closed: false,
+        booked_times: bookedTimes,
+        available_times: availableTimes,
+        all_times: VALID_TIME_SLOTS,
+      });
+    }
+  );
 });
 
 app.post("/api/appointments", (req, res) => {
@@ -251,27 +313,51 @@ app.post("/api/appointments", (req, res) => {
   const notes = String(req.body.notes || "").trim();
 
   if (!firstName || !lastName || !phone || !address || !appointmentDate || !appointmentTime) {
-    return res.status(400).json({ error: "Lütfen tüm gerekli alanları doldurunuz." });
+    return res.status(400).json({ error: "Lutfen tum gerekli alanlari doldurunuz." });
   }
 
-  // Validate date format (YYYY-MM-DD)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(appointmentDate)) {
-    return res.status(400).json({ error: "Geçerli bir tarih seçiniz." });
+    return res.status(400).json({ error: "Gecerli bir tarih seciniz." });
   }
 
-  // Validate time format (HH:MM)
   if (!/^\d{2}:\d{2}$/.test(appointmentTime)) {
-    return res.status(400).json({ error: "Geçerli bir saat seçiniz." });
+    return res.status(400).json({ error: "Gecerli bir saat seciniz." });
   }
 
-  db.run(
-    "INSERT INTO appointments (first_name, last_name, phone, email, address, appointment_date, appointment_time, service_type, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    [firstName, lastName, phone, email, address, appointmentDate, appointmentTime, serviceType, notes],
-    function onInsert(err) {
-      if (err) {
-        return res.status(500).json({ error: "Randevu kaydedilemedi" });
+  if (isSundayDate(appointmentDate)) {
+    return res.status(400).json({ error: "Pazar gunleri randevu alinmamaktadir." });
+  }
+
+  if (!isValidAppointmentTime(appointmentTime)) {
+    return res.status(400).json({
+      error: "Randevu saatleri 09:00 - 19:00 arasinda olmalidir.",
+    });
+  }
+
+  db.get(
+    "SELECT id FROM appointments WHERE appointment_date = ? AND appointment_time = ?",
+    [appointmentDate, appointmentTime],
+    (checkErr, existing) => {
+      if (checkErr) {
+        return res.status(500).json({ error: "Randevu kontrolu yapilamadi" });
       }
-      res.status(201).json({ success: true, id: this.lastID });
+
+      if (existing) {
+        return res.status(409).json({
+          error: "Bu tarih ve saat dolu. Lutfen baska bir saat seciniz.",
+        });
+      }
+
+      db.run(
+        "INSERT INTO appointments (first_name, last_name, phone, email, address, appointment_date, appointment_time, service_type, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [firstName, lastName, phone, email, address, appointmentDate, appointmentTime, serviceType, notes],
+        function onInsert(err) {
+          if (err) {
+            return res.status(500).json({ error: "Randevu kaydedilemedi" });
+          }
+          res.status(201).json({ success: true, id: this.lastID });
+        }
+      );
     }
   );
 });

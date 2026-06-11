@@ -8,123 +8,12 @@
     <meta property="og:description" content="Montaj, bakım veya keşif randevusu için formu doldurun. Uzman ekibimiz size en kısa sürede dönüş yapacak.">
     <meta property="og:type" content="website">
     <title>Randevu Al - Yildiz Deva</title>
+    <link rel="stylesheet" href="/site.css" />
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #0f3d66;
-            --dark: #102132;
-            --light: #f2f5f9;
-            --text: #202833;
-            --border: #dbe3ec;
-            --success: #28a745;
-            --error: #dc3545;
-        }
-
-        html, body {
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif;
-            background: var(--light);
-            color: var(--text);
-            line-height: 1.6;
-        }
-
-        .header {
-            background: linear-gradient(135deg, var(--primary), #1f5f91);
-            color: white;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(15, 61, 102, 0.15);
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 600;
-        }
-
-        .header p {
-            margin: 8px 0 0;
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        .container {
+        .page-wrap {
             max-width: 900px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .form-wrapper {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-        }
-
-        .form-section {
-            padding: 40px;
-        }
-
-        .form-section h2 {
-            font-size: 20px;
-            font-weight: 600;
-            margin: 0 0 30px;
-            color: var(--primary);
-            border-bottom: 3px solid var(--primary);
-            padding-bottom: 12px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .form-grid.full {
-            grid-template-columns: 1fr;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            font-weight: 500;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: var(--text);
-        }
-
-        .form-group label .required {
-            color: var(--error);
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 12px 14px;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: all 0.3s ease;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(15, 61, 102, 0.1);
+            margin: 0 auto;
+            padding: 32px 20px 56px;
         }
 
         .form-group textarea {
@@ -176,8 +65,8 @@
 
         .calendar-display {
             background: var(--light);
-            border: 2px solid var(--border);
-            border-radius: 8px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
             padding: 20px;
         }
 
@@ -235,10 +124,11 @@
         }
 
         .calendar-day.selected {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
             color: white;
-            border-color: var(--primary);
+            border-color: transparent;
             font-weight: 700;
+            box-shadow: 0 4px 12px rgba(12, 74, 124, 0.3);
         }
 
         .time-slots {
@@ -277,10 +167,61 @@
         }
 
         .time-slot.selected {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
             color: white;
-            border-color: var(--primary);
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(12, 74, 124, 0.25);
         }
+
+        .time-slot.booked {
+            background: #f0f0f0;
+            color: #999;
+            border-color: #ddd;
+            cursor: not-allowed;
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .time-slot.booked:hover {
+            transform: none;
+            border-color: #ddd;
+            background: #f0f0f0;
+        }
+
+        .calendar-day.sunday {
+            color: #bbb;
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .calendar-day.sunday:hover {
+            transform: none;
+            border-color: transparent;
+        }
+
+        .slot-info {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #5b6775;
+        }
+
+        .slot-info .legend {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 16px;
+        }
+
+        .slot-info .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .slot-info .dot.available { background: white; border: 2px solid var(--border); }
+        .slot-info .dot.booked { background: #f0f0f0; border: 2px solid #ddd; }
+        .slot-info .dot.selected-dot { background: var(--primary); }
 
         .button-group {
             display: flex;
@@ -289,42 +230,15 @@
             justify-content: flex-end;
         }
 
-        .btn {
-            padding: 12px 28px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background: #0a2950;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(15, 61, 102, 0.2);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: rgba(15, 61, 102, 0.05);
+        .btn-form {
+            padding: 14px 28px;
+            font-size: 15px;
         }
 
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            transform: none !important;
         }
 
         .success-message,
@@ -351,51 +265,6 @@
         .success-message.show,
         .error-message.show {
             display: block;
-        }
-
-        .floating-actions {
-            position: fixed;
-            bottom: 18px;
-            right: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 999;
-        }
-        .floating-actions a {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 160px;
-            padding: 12px 16px;
-            border-radius: 999px;
-            background: var(--primary);
-            color: #fff;
-            text-decoration: none;
-            font-weight: 600;
-            box-shadow: 0 14px 28px rgba(16, 33, 50, 0.16);
-        }
-        .floating-actions a.secondary {
-            background: #102132;
-        }
-        .back-to-top {
-            position: fixed;
-            right: 18px;
-            bottom: 120px;
-            width: 44px;
-            height: 44px;
-            border: none;
-            border-radius: 50%;
-            background: var(--primary);
-            color: #fff;
-            font-size: 22px;
-            cursor: pointer;
-            display: none;
-            box-shadow: 0 16px 28px rgba(16, 33, 50, 0.16);
-            z-index: 999;
-        }
-        .back-to-top:hover {
-            transform: translateY(-2px);
         }
 
         .loading {
@@ -425,11 +294,10 @@
         }
 
         .summary {
-            background: var(--light);
-            padding: 16px;
-            border-radius: 8px;
-            margin-top: 20px;
-            border-left: 4px solid var(--primary);
+            background: linear-gradient(135deg, rgba(12, 74, 124, 0.06), rgba(56, 189, 248, 0.06));
+            padding: 20px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
         }
 
         .summary-row {
@@ -443,40 +311,7 @@
             color: var(--text);
         }
 
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: var(--primary);
-            text-decoration: none;
-            border: 2px solid var(--primary);
-            padding: 10px 16px;
-            border-radius: 8px;
-            background: white;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .back-link:hover {
-            background: rgba(15, 61, 102, 0.05);
-        }
-
         @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .form-section {
-                padding: 24px;
-            }
-
-            .container {
-                margin: 20px auto;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
-
             .time-grid {
                 grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
             }
@@ -506,10 +341,32 @@
     </style>
   </head>
 <body>
-    <div class="header">
-        <h1>Randevu Sistemi</h1>
-        <p>Yildiz Deva - Cam Balkon Sistemleri</p>
-    </div>
+    <div class="topbar">Randevu saatleri: 09:00 – 19:00 · Pazar günleri kapalı</div>
+
+    <header class="site-header">
+        <nav class="site-nav">
+            <a href="/" class="brand">
+                <span class="brand-icon">YD</span>
+                <span class="brand-text">
+                    <span class="brand-name">Yıldız Deva</span>
+                    <span class="brand-tag">Cam Balkon Sistemleri</span>
+                </span>
+            </a>
+            <div class="nav-links">
+                <a href="/">Ana Sayfa</a>
+                <a href="/hakkimizda.html">Hakkımızda</a>
+                <a href="/sss.html">S.S.S.</a>
+                <a href="/randevu.html" class="nav-cta">Randevu Al</a>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero hero-compact">
+        <div class="container">
+            <h1>Online Randevu</h1>
+            <p>Ücretsiz keşif ve ölçüm için uygun tarih ve saati seçin</p>
+        </div>
+    </section>
 
     <div class="floating-actions">
         <a id="whatsappFab" href="#" target="_blank" rel="noreferrer">WhatsApp ile Sor</a>
@@ -518,8 +375,7 @@
 
     <button class="back-to-top" id="backToTop" type="button" aria-label="Yukarı çık">↑</button>
 
-    <div class="container">
-        <a href="/" class="back-link">← Ana Sayfaya Dön</a>
+    <div class="page-wrap">
         <div class="form-wrapper">
             <div class="success-message" id="successMessage">
                 ✓ Randevunuz başarıyla kaydedilmiştir. Size kısa sürede iletişime geçilecektir.
@@ -533,7 +389,7 @@
             <form id="appointmentForm">
                 <!-- Kişisel Bilgiler -->
                 <div class="form-section">
-                    <h2>Kişisel Bilgiler</h2>
+                    <h2><span class="step-badge">1</span> Kişisel Bilgiler</h2>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Ad <span class="required">*</span></label>
@@ -564,7 +420,7 @@
 
                 <!-- Hizmet Tipi -->
                 <div class="form-section">
-                    <h2>Hizmet Seçimi</h2>
+                    <h2><span class="step-badge">2</span> Hizmet Seçimi</h2>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Hizmet Türü <span class="required">*</span></label>
@@ -582,7 +438,7 @@
 
                 <!-- Tarih ve Saat Seçimi -->
                 <div class="form-section">
-                    <h2>Tarih ve Saat Seçimi</h2>
+                    <h2><span class="step-badge">3</span> Tarih ve Saat Seçimi</h2>
 
                     <div class="calendar-section">
                         <div class="calendar-header">
@@ -610,14 +466,20 @@
 
                     <div class="time-slots">
                         <h3>Saat Seçiniz <span class="required">*</span></h3>
+                        <div class="slot-info">
+                            <span class="legend"><span class="dot available"></span> Müsait</span>
+                            <span class="legend"><span class="dot booked"></span> Dolu</span>
+                            <span class="legend"><span class="dot selected-dot"></span> Seçili</span>
+                        </div>
                         <div class="time-grid" id="timeGrid"></div>
+                        <p id="timeSlotMessage" class="slot-info" style="display:none;"></p>
                         <input type="hidden" name="appointment_time" id="appointmentTime" />
                     </div>
                 </div>
 
                 <!-- Ek Notlar -->
                 <div class="form-section">
-                    <h2>Ek Bilgiler</h2>
+                    <h2><span class="step-badge">4</span> Ek Bilgiler</h2>
                     <div class="form-grid full">
                         <div class="form-group">
                             <label>Notlar</label>
@@ -656,13 +518,33 @@
                 <!-- Butonlar -->
                 <div class="form-section">
                     <div class="button-group">
-                        <button type="reset" class="btn btn-secondary">Temizle</button>
-                        <button type="submit" class="btn btn-primary">Randevuyu Onayla</button>
+                        <button type="reset" class="btn btn-outline btn-form">Temizle</button>
+                        <button type="submit" class="btn btn-form">Randevuyu Onayla</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
+
+    <footer class="site-footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="brand-name">Yıldız Deva</div>
+                <p>Cam balkon sistemlerinde güvenilir çözüm ortağınız.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Sayfalar</h4>
+                <a href="/">Ana Sayfa</a>
+                <a href="/hakkimizda.html">Hakkımızda</a>
+                <a href="/sss.html">S.S.S.</a>
+            </div>
+            <div class="footer-col">
+                <h4>İletişim</h4>
+                <a href="/randevu.html">Randevu Al</a>
+            </div>
+        </div>
+        <div class="footer-bottom">© 2026 Yıldız Deva Cam Balkon Sistemleri</div>
+    </footer>
 
     <script>
         const appointmentForm = document.getElementById('appointmentForm');
@@ -679,9 +561,26 @@
         let currentDate = new Date();
         let selectedDate = null;
         let selectedTime = null;
+        let bookedTimes = [];
 
         const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-        const timeSlots = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'];
+        const timeSlots = (() => {
+            const slots = [];
+            for (let hour = 9; hour <= 19; hour++) {
+                slots.push(String(hour).padStart(2, '0') + ':00');
+                if (hour < 19) slots.push(String(hour).padStart(2, '0') + ':30');
+            }
+            return slots;
+        })();
+
+        function isSunday(dateStr) {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Date(y, m - 1, d).getDay() === 0;
+        }
+
+        function formatDateLocal(year, month, day) {
+            return year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        }
 
         // Takvim oluştur
         function renderCalendar() {
@@ -712,11 +611,14 @@
                 dayDiv.textContent = day;
 
                 const date = new Date(year, month, day);
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = formatDateLocal(year, month, day);
+                const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                const isSun = date.getDay() === 0;
 
-                // Geçmiş günleri devre dışı bırak
-                if (date < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+                if (isPast || isSun) {
                     dayDiv.classList.add('disabled');
+                    if (isSun) dayDiv.classList.add('sunday');
+                    if (isSun) dayDiv.title = 'Pazar günleri randevu alınmamaktadır';
                 } else {
                     dayDiv.style.cursor = 'pointer';
                     dayDiv.addEventListener('click', () => selectDate(dateStr, dayDiv));
@@ -730,8 +632,51 @@
             }
         }
 
-        // Tarihi seç
-        function selectDate(dateStr, element) {
+        async function fetchAvailability(dateStr) {
+            const msgEl = document.getElementById('timeSlotMessage');
+            try {
+                const res = await fetch('/api/appointments/availability?date=' + encodeURIComponent(dateStr));
+                const data = await res.json();
+                if (!res.ok) {
+                    bookedTimes = [];
+                    if (msgEl) {
+                        msgEl.textContent = data.error || 'Müsaitlik bilgisi alınamadı.';
+                        msgEl.style.display = 'block';
+                    }
+                    return;
+                }
+                if (data.closed) {
+                    bookedTimes = timeSlots.slice();
+                    if (msgEl) {
+                        msgEl.textContent = data.reason || 'Bu gün randevu alınamaz.';
+                        msgEl.style.display = 'block';
+                    }
+                    return;
+                }
+                bookedTimes = data.booked_times || [];
+                if (msgEl) {
+                    if (bookedTimes.length === timeSlots.length) {
+                        msgEl.textContent = 'Bu tarihte tüm saatler dolu. Lütfen başka bir gün seçiniz.';
+                        msgEl.style.display = 'block';
+                    } else {
+                        msgEl.style.display = 'none';
+                    }
+                }
+            } catch (e) {
+                bookedTimes = [];
+                if (msgEl) {
+                    msgEl.textContent = 'Müsaitlik bilgisi yüklenemedi.';
+                    msgEl.style.display = 'block';
+                }
+            }
+        }
+
+        async function selectDate(dateStr, element) {
+            if (isSunday(dateStr)) {
+                showError('Pazar günleri randevu alınmamaktadır.');
+                return;
+            }
+
             if (selectedDate) {
                 document.querySelectorAll('.calendar-day.selected').forEach(el => {
                     el.classList.remove('selected');
@@ -739,24 +684,38 @@
             }
 
             selectedDate = dateStr;
+            selectedTime = null;
             appointmentDateInput.value = dateStr;
+            appointmentTimeInput.value = '';
             element.classList.add('selected');
-            
+
+            await fetchAvailability(dateStr);
             renderTimeSlots();
             updateSummary();
         }
 
-        // Saat slotlarını oluştur
         function renderTimeSlots() {
             timeGrid.innerHTML = '';
 
+            if (!selectedDate) {
+                const hint = document.createElement('p');
+                hint.className = 'slot-info';
+                hint.textContent = 'Önce bir tarih seçiniz.';
+                timeGrid.appendChild(hint);
+                return;
+            }
+
             timeSlots.forEach(time => {
                 const slot = document.createElement('div');
-                slot.className = 'time-slot';
-                slot.textContent = time;
-                slot.addEventListener('click', () => selectTime(time, slot));
+                const isBooked = bookedTimes.includes(time);
+                slot.className = 'time-slot' + (isBooked ? ' booked' : '');
+                slot.textContent = isBooked ? time + ' (Dolu)' : time;
 
-                if (selectedTime === time) {
+                if (!isBooked) {
+                    slot.addEventListener('click', () => selectTime(time, slot));
+                }
+
+                if (selectedTime === time && !isBooked) {
                     slot.classList.add('selected');
                 }
 
@@ -865,9 +824,11 @@
                     appointmentForm.reset();
                     selectedDate = null;
                     selectedTime = null;
+                    bookedTimes = [];
                     appointmentDateInput.value = '';
                     appointmentTimeInput.value = '';
                     summaryDiv.style.display = 'none';
+                    document.getElementById('timeSlotMessage').style.display = 'none';
                     renderCalendar();
                     renderTimeSlots();
                     
@@ -903,7 +864,18 @@
             document.getElementById(id).addEventListener('change', updateSummary);
         });
 
-        // İlk render
+        appointmentForm.addEventListener('reset', () => {
+            selectedDate = null;
+            selectedTime = null;
+            bookedTimes = [];
+            appointmentDateInput.value = '';
+            appointmentTimeInput.value = '';
+            summaryDiv.style.display = 'none';
+            document.getElementById('timeSlotMessage').style.display = 'none';
+            renderCalendar();
+            renderTimeSlots();
+        });
+
         renderCalendar();
         renderTimeSlots();
 

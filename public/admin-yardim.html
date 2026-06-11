@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Yıldız Deva admin paneli kullanım kılavuzu.">
+    <title>Admin Panel Kullanım Kılavuzu - Yıldız Deva</title>
+    <link rel="stylesheet" href="/site.css" />
+    <style>
+        .page-content { max-width: 900px; margin: 0 auto; padding: 48px 20px 56px; }
+        .tip {
+            background: rgba(5, 150, 105, 0.08);
+            border-left: 4px solid var(--success);
+            padding: 14px 18px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            margin: 16px 0;
+            font-size: 14px;
+            color: var(--muted);
+        }
+        .warning {
+            background: rgba(230, 168, 23, 0.1);
+            border-left: 4px solid #e6a817;
+            padding: 14px 18px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            margin: 16px 0;
+            font-size: 14px;
+            color: var(--muted);
+        }
+        .step-row {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+        .step-num {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+        th, td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+        th { background: var(--light); color: var(--primary); font-weight: 700; }
+        code { background: var(--light); padding: 2px 7px; border-radius: 5px; font-size: 13px; }
+        .page-card h3 { margin: 20px 0 10px; font-size: 16px; font-weight: 700; color: var(--text); }
+        .page-card ol, .page-card ul { color: var(--muted); padding-left: 22px; }
+        .page-card li { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <div class="topbar">Site yönetimi kılavuzu</div>
+
+    <header class="site-header">
+        <nav class="site-nav">
+            <a href="/" class="brand">
+                <span class="brand-icon">YD</span>
+                <span class="brand-text">
+                    <span class="brand-name">Yıldız Deva</span>
+                    <span class="brand-tag">Admin Kılavuzu</span>
+                </span>
+            </a>
+            <div class="nav-links">
+                <a href="/">Ana Sayfa</a>
+                <a href="/admin-yardim.html" class="active">Admin Yardım</a>
+                <a href="/randevu.html" class="nav-cta">Randevu Al</a>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero hero-compact">
+        <div class="container">
+            <h1>Admin Panel Kullanım Kılavuzu</h1>
+            <p>Site yönetimi için adım adım rehber</p>
+        </div>
+    </section>
+
+    <div class="page-content">
+        <div class="page-card">
+            <h2>Giriş Yapma</h2>
+            <h3>Ana Sayfa (Önerilen)</h3>
+            <div class="step-row"><span class="step-num">1</span><div>Ana sayfada sağ üstteki <code>Admin</code> butonuna tıklayın.</div></div>
+            <div class="step-row"><span class="step-num">2</span><div>Kullanıcı adı ve şifrenizi girin, <strong>Giriş Yap</strong> butonuna basın.</div></div>
+            <div class="step-row"><span class="step-num">3</span><div>Ürün, galeri ve randevu yönetim bölümleri açılır.</div></div>
+            <div class="warning">
+                <strong>Güvenlik:</strong> Canlı ortamda varsayılan şifreyi (<code>umut123</code>) mutlaka değiştirin.
+                Ortam değişkenleri: <code>ADMIN_PASSWORD</code> veya <code>ADMIN_USER</code> + <code>ADMIN_PASS</code>.
+            </div>
+        </div>
+
+        <div class="page-card">
+            <h2>Ürün Yönetimi</h2>
+            <ol>
+                <li>"Yeni Ürün Ekle" bölümünde ad, açıklama ve m² fiyatını girin.</li>
+                <li>"Ürün Ekle" ile kaydedin — ana sayfa ve hesaplayıcıda görünür.</li>
+                <li>Listeden düzenleyip <strong>Kaydet</strong> veya <strong>Sil</strong> kullanın.</li>
+            </ol>
+        </div>
+
+        <div class="page-card">
+            <h2>Galeri Yönetimi</h2>
+            <ol>
+                <li>Başlık (isteğe bağlı) ve fotoğraf seçin (max 5 MB).</li>
+                <li>"Fotoğraf Yükle" ile ana sayfa galerisine ekleyin.</li>
+                <li>Silmek için fotoğraf altındaki Sil butonunu kullanın.</li>
+            </ol>
+            <div class="tip"><strong>İpucu:</strong> Yatay fotoğraflar galeride daha iyi görünür.</div>
+        </div>
+
+        <div class="page-card">
+            <h2>Randevu Yönetimi</h2>
+            <p>Müşteri randevuları burada listelenir. Kurallar:</p>
+            <ul>
+                <li>Saatler: <strong>09:00 – 19:00</strong></li>
+                <li><strong>Pazar</strong> kapalı</li>
+                <li>Her saate <strong>tek randevu</strong></li>
+            </ul>
+            <p>İptal edilen randevuları silerek saati tekrar müsait hale getirebilirsiniz.</p>
+        </div>
+
+        <div class="page-card">
+            <h2>Sık Sorunlar</h2>
+            <h3>"Yetkisiz" hatası</h3>
+            <p>Şifre yanlış olabilir. Çıkış yapıp tekrar deneyin.</p>
+            <h3>Fotoğraf yüklenmiyor</h3>
+            <p>Max 5 MB, JPG/PNG/WebP formatında olmalı.</p>
+            <h3>Randevular görünmüyor</h3>
+            <p>Giriş yaptığınızdan emin olun, sayfayı yenileyin.</p>
+        </div>
+
+        <div style="text-align:center; margin-top: 24px;">
+            <a href="/" class="btn">Ana Sayfaya Git</a>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-bottom">© 2026 Yıldız Deva Cam Balkon Sistemleri — Admin Kılavuzu</div>
+    </footer>
+</body>
+</html>
