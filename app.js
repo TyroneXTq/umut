@@ -8,9 +8,9 @@ const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const APP_BUILD = "2026-05-04";
 
-const ADMIN_KEY = process.env.ADMIN_KEY || "devadmin123";
-const ADMIN_USER = process.env.ADMIN_USER || "admin";
-const ADMIN_PASS = process.env.ADMIN_PASS || "sifre123";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "umut123";
+const ADMIN_USER = process.env.ADMIN_USER || "";
+const ADMIN_PASS = process.env.ADMIN_PASS || "";
 
 // Render'da persistent depolama için /data, local'de public/uploads kullan
 const DATA_DIR = fs.existsSync("/data") ? "/data" : path.join(__dirname, "public");
@@ -43,19 +43,23 @@ app.get("/api/health", (req, res) => {
 });
 
 function requireAdminAuth(req, res, next) {
+  const password = req.header("x-admin-password") || "";
   const user = req.header("x-admin-user") || "";
   const pass = req.header("x-admin-pass") || "";
-  const key = req.header("x-admin-key") || "";
 
-  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+  if (password === ADMIN_PASSWORD) {
     return next();
   }
 
-  if (key && key === ADMIN_KEY) {
+  if (ADMIN_USER && ADMIN_PASS && user === ADMIN_USER && pass === ADMIN_PASS) {
     return next();
   }
 
   return res.status(401).json({ error: "Yetkisiz" });
+}
+
+function requireAdminKey(req, res, next) {
+  return requireAdminAuth(req, res, next);
 }
 
 const storage = multer.diskStorage({
@@ -121,7 +125,13 @@ db.serialize(() => {
       first_name TEXT NOT NULL,
       last_name TEXT NOT NULL,
       phone TEXT NOT NULL,
+      email TEXT,
       address TEXT NOT NULL,
+      appointment_date TEXT NOT NULL,
+      appointment_time TEXT NOT NULL,
+      service_type TEXT,
+      notes TEXT,
+      status TEXT DEFAULT 'pending',
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
@@ -233,15 +243,30 @@ app.post("/api/appointments", (req, res) => {
   const firstName = String(req.body.first_name || "").trim();
   const lastName = String(req.body.last_name || "").trim();
   const phone = String(req.body.phone || "").trim();
+  const email = String(req.body.email || "").trim();
   const address = String(req.body.address || "").trim();
+  const appointmentDate = String(req.body.appointment_date || "").trim();
+  const appointmentTime = String(req.body.appointment_time || "").trim();
+  const serviceType = String(req.body.service_type || "").trim();
+  const notes = String(req.body.notes || "").trim();
 
-  if (!firstName || !lastName || !phone || !address) {
-    return res.status(400).json({ error: "Lutfen isim, telefon ve adres bilgilerini eksiksiz giriniz" });
+  if (!firstName || !lastName || !phone || !address || !appointmentDate || !appointmentTime) {
+    return res.status(400).json({ error: "Lütfen tüm gerekli alanları doldurunuz." });
+  }
+
+  // Validate date format (YYYY-MM-DD)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(appointmentDate)) {
+    return res.status(400).json({ error: "Geçerli bir tarih seçiniz." });
+  }
+
+  // Validate time format (HH:MM)
+  if (!/^\d{2}:\d{2}$/.test(appointmentTime)) {
+    return res.status(400).json({ error: "Geçerli bir saat seçiniz." });
   }
 
   db.run(
-    "INSERT INTO appointments (first_name, last_name, phone, address) VALUES (?, ?, ?, ?)",
-    [firstName, lastName, phone, address],
+    "INSERT INTO appointments (first_name, last_name, phone, email, address, appointment_date, appointment_time, service_type, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [firstName, lastName, phone, email, address, appointmentDate, appointmentTime, serviceType, notes],
     function onInsert(err) {
       if (err) {
         return res.status(500).json({ error: "Randevu kaydedilemedi" });

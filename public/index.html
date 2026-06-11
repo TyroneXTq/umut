@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Yildiz Deva Cam Balkon Sistemleri ile modern cam balkon çözümleri, hızlı ölçüm randevuları ve güvenilir montaj hizmeti alın.">
+    <meta property="og:title" content="Yildiz Deva Cam Balkon Sistemleri">
+    <meta property="og:description" content="Cam balkon ölçüm, montaj ve bakım hizmetleri. Ücretsiz keşif ve teklif için hemen randevu alın.">
+    <meta property="og:type" content="website">
     <title>Yildiz Deva Cam Balkon Sistemleri</title>
     <style>
       :root {
@@ -191,6 +195,77 @@
         background: #2d6ea1;
         padding: 9px 12px;
         border-radius: 8px;
+      }
+      .service-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+      }
+      .service-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 14px 35px rgba(16, 33, 50, 0.08);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+      }
+      .service-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 18px 45px rgba(16, 33, 50, 0.12);
+      }
+      .service-card h3 {
+        margin: 0 0 10px;
+        font-size: 18px;
+        color: var(--primary);
+      }
+      .service-card p {
+        margin: 0;
+        color: #5b6775;
+        line-height: 1.7;
+      }
+      .floating-actions {
+        position: fixed;
+        bottom: 18px;
+        right: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 999;
+      }
+      .floating-actions a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 160px;
+        padding: 12px 16px;
+        border-radius: 999px;
+        background: var(--primary);
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+        box-shadow: 0 14px 30px rgba(16, 33, 50, 0.12);
+      }
+      .floating-actions a.secondary {
+        background: #102132;
+      }
+      .back-to-top {
+        position: fixed;
+        right: 18px;
+        bottom: 120px;
+        width: 46px;
+        height: 46px;
+        border: none;
+        border-radius: 50%;
+        background: var(--primary);
+        color: #fff;
+        font-size: 22px;
+        cursor: pointer;
+        display: none;
+        box-shadow: 0 16px 28px rgba(16, 33, 50, 0.2);
+        z-index: 999;
+      }
+      .back-to-top:hover {
+        transform: translateY(-2px);
       }
       footer {
         text-align: center;
@@ -455,6 +530,33 @@
       </div>
     </header>
 
+    <section class="section">
+      <div class="container">
+        <div class="showcase-head">
+          <h2>Hizmetlerimiz</h2>
+          <div class="sub">Yerinde ölçüm, net teklif ve hızlı montaj süreçleriyle cam balkon ihtiyaçlarınızı en pratik şekilde karşılıyoruz.</div>
+        </div>
+        <div class="service-grid">
+          <div class="service-card">
+            <h3>Ölçüm ve Keşif</h3>
+            <p>Evinize gelerek doğru ölçümleri alıyoruz, yanlış teklif riskini ortadan kaldırıyoruz.</p>
+          </div>
+          <div class="service-card">
+            <h3>Fiyat Teklifi</h3>
+            <p>Şeffaf fiyatlandırma ile metrekaresine göre hızlı teklif sunuyoruz.</p>
+          </div>
+          <div class="service-card">
+            <h3>Montaj Hizmeti</h3>
+            <p>Deneyimli ekiplerimizle kısa sürede montaj yapıyor, garantili teslimat sağlıyoruz.</p>
+          </div>
+          <div class="service-card">
+            <h3>Bakım & Onarım</h3>
+            <p>Sistemlerinizi uzun ömürlü tutmak için düzenli bakım ve onarım çözümleri sunuyoruz.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <main class="container">
       <section class="section" id="showcaseSection">
         <div class="showcase">
@@ -518,6 +620,12 @@
         </div>
       </section>
     </main>
+
+    <div class="floating-actions">
+      <a id="whatsappFab" href="#" target="_blank" rel="noreferrer">WhatsApp ile Sor</a>
+      <a href="/randevu.html" class="secondary">Hemen Randevu Al</a>
+    </div>
+    <button class="back-to-top" id="backToTop" type="button" aria-label="Yukarı çık">↑</button>
 
     <footer>© Yildiz Deva Cam Balkon Sistemleri</footer>
 
@@ -650,10 +758,28 @@
       // WhatsApp numaranizi buraya yazin (basinda 90 olacak sekilde, bosluk yok)
       const WHATSAPP_NUMBER = "905XXXXXXXXX";
       const waLink = document.getElementById("waLink");
+      const whatsappFab = document.getElementById('whatsappFab');
       if (WHATSAPP_NUMBER.indexOf("X") === -1 && WHATSAPP_NUMBER.length > 4) {
         waLink.href = "https://wa.me/" + WHATSAPP_NUMBER;
+        if (whatsappFab) {
+          whatsappFab.href = "https://wa.me/" + WHATSAPP_NUMBER;
+        }
       } else {
         waLink.href = "https://wa.me/";
+        if (whatsappFab) {
+          whatsappFab.href = "https://wa.me/";
+        }
+      }
+
+      const backToTopBtn = document.getElementById('backToTop');
+      window.addEventListener('scroll', () => {
+        if (!backToTopBtn) return;
+        backToTopBtn.style.display = window.scrollY > 380 ? 'block' : 'none';
+      });
+      if (backToTopBtn) {
+        backToTopBtn.addEventListener('click', () => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
       }
 
       // ========== ADMIN PANEL ==========
@@ -759,6 +885,7 @@
             headers: {
               "x-admin-user": user,
               "x-admin-pass": pass,
+              "x-admin-password": pass,
             },
           });
           return res.ok;
@@ -835,6 +962,9 @@
         if (auth) {
           headers.set("x-admin-user", auth.user);
           headers.set("x-admin-pass", auth.pass);
+          if (auth.pass) {
+            headers.set("x-admin-password", auth.pass);
+          }
         }
 
         const key = getAdminKey();
@@ -1088,6 +1218,16 @@
           const row = document.createElement("div");
           row.className = "admin-item";
 
+          const serviceNames = {
+            montaj: "Montaj Randevusu",
+            bakım: "Bakım ve Onarım",
+            fiyat_teklifi: "Fiyat Teklifi",
+            danışma: "Ücretsiz Danışma",
+            ölçüm: "Ölçüm Alma",
+          };
+          const serviceName = serviceNames[item.service_type] || item.service_type || "Belirtilmedi";
+          const statusName = item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Beklemede";
+
           const nameField = document.createElement("input");
           nameField.type = "text";
           nameField.value = esc(item.first_name + " " + item.last_name);
@@ -1098,22 +1238,43 @@
           phoneField.value = esc(item.phone);
           phoneField.disabled = true;
 
+          const emailField = document.createElement("input");
+          emailField.type = "text";
+          emailField.value = esc(item.email || "-");
+          emailField.disabled = true;
+
+          const serviceField = document.createElement("input");
+          serviceField.type = "text";
+          serviceField.value = esc(serviceName);
+          serviceField.disabled = true;
+
+          const dateField = document.createElement("input");
+          dateField.type = "text";
+          dateField.value = esc(item.appointment_date + " " + item.appointment_time);
+          dateField.disabled = true;
+
+          const statusField = document.createElement("input");
+          statusField.type = "text";
+          statusField.value = esc(statusName);
+          statusField.disabled = true;
+
           const addressField = document.createElement("input");
           addressField.type = "text";
           addressField.value = esc(item.address);
           addressField.disabled = true;
+          addressField.style.gridColumn = "span 6";
 
-          const dateField = document.createElement("button");
-          dateField.type = "button";
-          dateField.textContent = new Date(item.created_at).toLocaleString("tr-TR");
-          dateField.disabled = true;
-          dateField.style.flex = "1";
-          dateField.style.cursor = "default";
+          const notesField = document.createElement("input");
+          notesField.type = "text";
+          notesField.value = esc(item.notes || "-");
+          notesField.disabled = true;
+          notesField.style.gridColumn = "span 6";
 
           const deleteButton = document.createElement("button");
           deleteButton.type = "button";
           deleteButton.className = "secondary";
           deleteButton.textContent = "Sil";
+          deleteButton.style.gridColumn = "span 6";
           deleteButton.addEventListener("click", async () => {
             const ok = confirm("Bu randevuyu silmek istiyor musunuz?");
             if (!ok) return;
@@ -1128,8 +1289,12 @@
 
           row.appendChild(nameField);
           row.appendChild(phoneField);
-          row.appendChild(addressField);
+          row.appendChild(emailField);
+          row.appendChild(serviceField);
           row.appendChild(dateField);
+          row.appendChild(statusField);
+          row.appendChild(addressField);
+          row.appendChild(notesField);
           row.appendChild(deleteButton);
           list.appendChild(row);
         });
