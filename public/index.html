@@ -374,7 +374,7 @@
           <div class="admin-section">
             <h3>� Admin Girişi</h3>
             <div class="admin-item" style="border-bottom:none;">
-              <input id="adminUser" type="text" placeholder="Kullanıcı adı" />
+              <input id="adminUser" type="text" placeholder="admin" autocomplete="username" />
               <input id="adminPass" type="password" placeholder="Şifre" />
               <button id="adminLoginBtn" style="grid-column: span 2;">Giriş Yap</button>
               <button id="adminLogoutBtn" type="button" class="secondary hidden" style="grid-column: span 2;">Çıkış Yap</button>
@@ -743,10 +743,16 @@
       document.getElementById("adminLoginBtn").addEventListener("click", async () => {
         const user = document.getElementById("adminUser").value.trim();
         const pass = document.getElementById("adminPass").value.trim();
+        const status = document.getElementById("adminLoginStatus");
         if (!user || !pass) {
-          const status = document.getElementById("adminLoginStatus");
           status.className = "status bad";
           status.textContent = "Kullanıcı adı ve şifre doldurulmalı.";
+          status.classList.remove("hidden");
+          return;
+        }
+        if (user !== "admin") {
+          status.className = "status bad";
+          status.textContent = 'Kullanıcı adı yalnızca "admin" olabilir.';
           status.classList.remove("hidden");
           return;
         }

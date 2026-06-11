@@ -357,8 +357,10 @@
             <h1>Admin Panel</h1>
             <p>Yildiz Deva Cam Balkon Sistemleri</p>
             <form class="login-form" id="loginForm">
+                <label for="username">Kullanıcı Adı</label>
+                <input type="text" id="username" name="username" placeholder="admin" required autocomplete="username" />
                 <label for="password">Şifre</label>
-                <input type="password" id="password" name="password" placeholder="Şifrenizi giriniz" required autofocus />
+                <input type="password" id="password" name="password" placeholder="Şifrenizi giriniz" required autocomplete="current-password" />
                 <button type="submit">Giriş Yap</button>
             </form>
             <div class="login-error" id="loginError"></div>
@@ -423,25 +425,39 @@
     </div>
 
     <script>
-        const ADMIN_PASSWORD = 'umut123';
+        const ADMIN_USER = 'admin';
+        const ADMIN_PASS = 'admin123';
         const API_ENDPOINT = '/api/appointments';
 
         let isAuthenticated = false;
         let allAppointments = [];
 
         // Login Form
+        function getAdminHeaders() {
+            return {
+                'x-admin-user': ADMIN_USER,
+                'x-admin-pass': ADMIN_PASS,
+            };
+        }
+
         document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
 
-            if (password === ADMIN_PASSWORD) {
+            if (username !== ADMIN_USER) {
+                showLoginError('Kullanıcı adı yalnızca "admin" olabilir.');
+                return;
+            }
+
+            if (password === ADMIN_PASS) {
                 isAuthenticated = true;
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('adminDashboard').style.display = 'block';
                 document.getElementById('password').value = '';
                 loadAppointments();
             } else {
-                showLoginError('Yanlış şifre. Lütfen tekrar deneyiniz.');
+                showLoginError('Yanlış kullanıcı adı veya şifre.');
                 document.getElementById('password').value = '';
                 document.getElementById('password').focus();
             }
@@ -474,9 +490,7 @@
 
             try {
                 const response = await fetch(API_ENDPOINT, {
-                    headers: {
-                        'x-admin-password': ADMIN_PASSWORD
-                    }
+                    headers: getAdminHeaders()
                 });
 
                 if (response.status === 401) {
@@ -573,7 +587,7 @@
                 const response = await fetch(`${API_ENDPOINT}/${id}`, {
                     method: 'DELETE',
                     headers: {
-                        'x-admin-password': ADMIN_PASSWORD
+                        ...getAdminHeaders()
                     }
                 });
 

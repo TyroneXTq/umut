@@ -8,9 +8,8 @@ const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const APP_BUILD = "2026-05-04";
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "umut123";
-const ADMIN_USER = process.env.ADMIN_USER || "";
-const ADMIN_PASS = process.env.ADMIN_PASS || "";
+const ADMIN_USER = process.env.ADMIN_USER || "admin";
+const ADMIN_PASS = process.env.ADMIN_PASS || process.env.ADMIN_PASSWORD || "admin123";
 
 // Kalici depolama: Render /data, local proje/data (admin silmedikce silinmez)
 function resolveDataDir() {
@@ -171,22 +170,19 @@ app.get("/api/health", (req, res) => {
       persistent: true,
     },
     auth: {
-      method: process.env.ADMIN_USER && process.env.ADMIN_PASS ? "user-pass" : "key",
+      method: "user-pass",
       adminUser: ADMIN_USER,
     },
   });
 });
 
 function requireAdminAuth(req, res, next) {
-  const password = req.header("x-admin-password") || "";
-  const user = req.header("x-admin-user") || "";
-  const pass = req.header("x-admin-pass") || "";
+  const user = String(req.header("x-admin-user") || "").trim();
+  const pass = String(
+    req.header("x-admin-pass") || req.header("x-admin-password") || ""
+  ).trim();
 
-  if (password === ADMIN_PASSWORD) {
-    return next();
-  }
-
-  if (ADMIN_USER && ADMIN_PASS && user === ADMIN_USER && pass === ADMIN_PASS) {
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
     return next();
   }
 
@@ -747,7 +743,5 @@ app.listen(PORT, () => {
   console.log(`Yonetim paneli: http://localhost:${PORT}/yonetim`);
   console.log(`Kalici depolama: ${DATA_DIR}`);
   console.log(`Galeri klasoru: ${UPLOAD_DIR}`);
-  if (!process.env.ADMIN_KEY) {
-    console.log("UYARI: ADMIN_KEY ayarli degil, varsayilan anahtar kullaniliyor: devadmin123");
-  }
+  console.log(`Admin giris: kullanici="${ADMIN_USER}"`);
 });

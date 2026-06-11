@@ -7,8 +7,11 @@ services:
     buildCommand: npm ci --omit=dev
     startCommand: npm start
     envVars:
-      - key: ADMIN_KEY
-        value: devadmin123
+      - key: ADMIN_USER
+        value: admin
+        scope: run
+      - key: ADMIN_PASS
+        value: admin123
         scope: run
     # Render'da SQL için kullanıcı oluştur
     disk:
