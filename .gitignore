@@ -85,7 +85,14 @@ data.db-shm
 data.db-wal
 /data
 
-# Uploads folder (generated at runtime)
+# Kalici runtime depolama (veritabani + galeri fotograflari)
+data/*
+!data/.gitkeep
+!data/uploads/
+data/uploads/*
+!data/uploads/.gitkeep
+
+# Eski uploads klasoru (geriye donuk)
 public/uploads/*
 !public/uploads/.gitkeep
 

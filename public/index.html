@@ -1062,7 +1062,7 @@
       }
 
       async function loadGalleryAdmin() {
-        const res = await fetch("/api/gallery");
+        const res = await adminFetch("/api/gallery/admin");
         const items = await res.json();
         galleryAdminList.innerHTML = "";
         items.forEach((item) => {
@@ -1076,7 +1076,12 @@
           
           const meta = document.createElement("div");
           meta.className = "gallery-meta";
-          meta.textContent = esc(item.title || "Baslik yok");
+          meta.textContent = esc(item.title || "Baslik yok") +
+            (item.file_exists === false ? " (dosya eksik)" : "");
+          if (item.file_exists === false) {
+            tile.style.opacity = "0.65";
+            img.alt = "Dosya bulunamadi";
+          }
 
           const btnContainer = document.createElement("div");
           btnContainer.style.display = "flex";

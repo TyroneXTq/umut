@@ -12,13 +12,143 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "umut123";
 const ADMIN_USER = process.env.ADMIN_USER || "";
 const ADMIN_PASS = process.env.ADMIN_PASS || "";
 
-// Render'da persistent depolama için /data, local'de public/uploads kullan
-const DATA_DIR = fs.existsSync("/data") ? "/data" : path.join(__dirname, "public");
-const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+// Kalici depolama: Render /data, local proje/data (admin silmedikce silinmez)
+function resolveDataDir() {
+  if (process.env.DATA_DIR) {
+    return path.resolve(process.env.DATA_DIR);
+  }
+  if (fs.existsSync("/data")) {
+    return "/data";
+  }
+  return path.join(__dirname, "data");
 }
+
+const DATA_DIR = resolveDataDir();
+const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
+const DB_PATH = path.join(DATA_DIR, "data.db");
+const LEGACY_PUBLIC_DIR = path.join(__dirname, "public");
+const LEGACY_DB_PATH = path.join(LEGACY_PUBLIC_DIR, "data.db");
+const LEGACY_UPLOAD_DIR = path.join(LEGACY_PUBLIC_DIR, "uploads");
+const IMAGE_EXTENSIONS = new Set([
+  ".jpg", ".jpeg", ".png", ".webp", ".gif", ".jfif", ".bmp", ".heic", ".heif",
+]);
+
+function ensureDir(dirPath) {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+}
+
+function isImageFilename(filename) {
+  return IMAGE_EXTENSIONS.has(path.extname(filename).toLowerCase());
+}
+
+function copyFileIfMissing(sourcePath, targetPath) {
+  if (!fs.existsSync(sourcePath) || fs.existsSync(targetPath)) {
+    return false;
+  }
+  fs.copyFileSync(sourcePath, targetPath);
+  return true;
+}
+
+function migrateLegacyStorage() {
+  ensureDir(DATA_DIR);
+  ensureDir(UPLOAD_DIR);
+
+  if (fs.existsSync(LEGACY_DB_PATH) && !fs.existsSync(DB_PATH)) {
+    fs.copyFileSync(LEGACY_DB_PATH, DB_PATH);
+    console.log("Eski veritabani kalici depolamaya tasindi:", DB_PATH);
+  }
+
+  if (!fs.existsSync(LEGACY_UPLOAD_DIR)) {
+    return;
+  }
+
+  fs.readdirSync(LEGACY_UPLOAD_DIR).forEach((filename) => {
+    if (filename.startsWith(".")) {
+      return;
+    }
+    const copied = copyFileIfMissing(
+      path.join(LEGACY_UPLOAD_DIR, filename),
+      path.join(UPLOAD_DIR, filename)
+    );
+    if (copied) {
+      console.log("Eski galeri fotografi tasindi:", filename);
+    }
+  });
+}
+
+function galleryFileExists(filename) {
+  if (!filename) {
+    return false;
+  }
+  const safePath = path.resolve(path.join(UPLOAD_DIR, filename));
+  if (!safePath.startsWith(path.resolve(UPLOAD_DIR))) {
+    return false;
+  }
+  return fs.existsSync(safePath);
+}
+
+function syncGalleryFromDisk() {
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    return;
+  }
+
+  const diskFiles = fs
+    .readdirSync(UPLOAD_DIR)
+    .filter((filename) => !filename.startsWith(".") && isImageFilename(filename));
+
+  db.all("SELECT filename FROM gallery", [], (err, rows) => {
+    if (err) {
+      console.error("Galeri senkronizasyonu okunamadi:", err.message);
+      return;
+    }
+
+    const known = new Set((rows || []).map((row) => row.filename));
+    let restored = 0;
+
+    diskFiles.forEach((filename) => {
+      if (known.has(filename)) {
+        return;
+      }
+
+      db.run(
+        "INSERT INTO gallery (title, filename) VALUES (?, ?)",
+        ["", filename],
+        (insertErr) => {
+          if (insertErr) {
+            console.error("Galeri kaydi olusturulamadi:", filename, insertErr.message);
+            return;
+          }
+          restored += 1;
+          console.log("Diskteki fotograf veritabanina eklendi:", filename);
+        }
+      );
+    });
+
+    db.all("SELECT id, filename FROM gallery", [], (listErr, galleryRows) => {
+      if (listErr) {
+        return;
+      }
+
+      (galleryRows || []).forEach((row) => {
+        if (!galleryFileExists(row.filename)) {
+          console.warn(
+            "Galeri kaydi var ama dosya bulunamadi (kayit silinmedi):",
+            row.filename
+          );
+        }
+      });
+
+      if (restored > 0) {
+        console.log("Galeri senkronizasyonu tamamlandi:", restored, "kayit eklendi");
+      }
+    });
+  });
+}
+
+migrateLegacyStorage();
+ensureDir(UPLOAD_DIR);
 
 app.use(express.json());
 
@@ -35,6 +165,11 @@ app.get("/api/health", (req, res) => {
     ok: true,
     build: APP_BUILD,
     gallery: true,
+    storage: {
+      dataDir: DATA_DIR,
+      uploadsDir: UPLOAD_DIR,
+      persistent: true,
+    },
     auth: {
       method: process.env.ADMIN_USER && process.env.ADMIN_PASS ? "user-pass" : "key",
       adminUser: ADMIN_USER,
@@ -97,10 +232,13 @@ const upload = multer({
 app.use("/uploads", express.static(UPLOAD_DIR));
 app.use(express.static(path.join(__dirname, "public")));
 
-const DB_PATH = path.join(DATA_DIR, "data.db");
 const db = new sqlite3.Database(DB_PATH);
 
 db.serialize(() => {
+  db.run("PRAGMA journal_mode=WAL");
+  db.run("PRAGMA synchronous=NORMAL");
+  db.run("PRAGMA foreign_keys=ON");
+
   db.run(`
     CREATE TABLE IF NOT EXISTS products (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -152,6 +290,8 @@ db.serialize(() => {
       stmt.finalize();
     }
   });
+
+  syncGalleryFromDisk();
 });
 
 app.get("/api/gallery", (req, res) => {
@@ -159,11 +299,35 @@ app.get("/api/gallery", (req, res) => {
     if (err) {
       return res.status(500).json({ error: "Galeri alinamadi" });
     }
-    const list = rows.map((row) => ({
+
+    const list = (rows || [])
+      .filter((row) => galleryFileExists(row.filename))
+      .map((row) => ({
+        id: row.id,
+        title: row.title,
+        url: "/uploads/" + row.filename,
+        created_at: row.created_at,
+      }));
+
+    res.json(list);
+  });
+});
+
+app.get("/api/gallery/admin", requireAdminAuth, (req, res) => {
+  db.all("SELECT * FROM gallery ORDER BY id DESC", [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: "Galeri alinamadi" });
+    }
+
+    const list = (rows || []).map((row) => ({
       id: row.id,
       title: row.title,
+      filename: row.filename,
       url: "/uploads/" + row.filename,
+      created_at: row.created_at,
+      file_exists: galleryFileExists(row.filename),
     }));
+
     res.json(list);
   });
 });
@@ -253,6 +417,37 @@ function isValidAppointmentTime(timeStr) {
   return VALID_TIME_SLOTS.includes(timeStr);
 }
 
+function timeToMinutes(timeStr) {
+  const [hour, minute] = timeStr.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+function getLocalDateStr(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getLocalTimeStr(date = new Date()) {
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  return `${hour}:${minute}`;
+}
+
+function getPastTimeSlotsForDate(dateStr, now = new Date()) {
+  if (dateStr !== getLocalDateStr(now)) {
+    return [];
+  }
+
+  const nowMinutes = timeToMinutes(getLocalTimeStr(now));
+  return VALID_TIME_SLOTS.filter((slot) => timeToMinutes(slot) <= nowMinutes);
+}
+
+function isPastAppointmentSlot(dateStr, timeStr, now = new Date()) {
+  return getPastTimeSlotsForDate(dateStr, now).includes(timeStr);
+}
+
 app.get("/api/appointments", requireAdminAuth, (req, res) => {
   db.all("SELECT * FROM appointments ORDER BY id DESC", [], (err, rows) => {
     if (err) {
@@ -288,12 +483,16 @@ app.get("/api/appointments/availability", (req, res) => {
       }
 
       const bookedTimes = rows.map((row) => row.appointment_time);
-      const availableTimes = VALID_TIME_SLOTS.filter((slot) => !bookedTimes.includes(slot));
+      const pastTimes = getPastTimeSlotsForDate(appointmentDate);
+      const availableTimes = VALID_TIME_SLOTS.filter(
+        (slot) => !bookedTimes.includes(slot) && !pastTimes.includes(slot)
+      );
 
       res.json({
         date: appointmentDate,
         closed: false,
         booked_times: bookedTimes,
+        past_times: pastTimes,
         available_times: availableTimes,
         all_times: VALID_TIME_SLOTS,
       });
@@ -331,6 +530,12 @@ app.post("/api/appointments", (req, res) => {
   if (!isValidAppointmentTime(appointmentTime)) {
     return res.status(400).json({
       error: "Randevu saatleri 09:00 - 19:00 arasinda olmalidir.",
+    });
+  }
+
+  if (isPastAppointmentSlot(appointmentDate, appointmentTime)) {
+    return res.status(400).json({
+      error: "Gecmis bir saat secilemez. Lutfen ileri bir saat seciniz.",
     });
   }
 
@@ -504,6 +709,8 @@ app.get("/api/estimate", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Sunucu calisiyor: http://localhost:${PORT}`);
   console.log(`Yonetim paneli: http://localhost:${PORT}/yonetim`);
+  console.log(`Kalici depolama: ${DATA_DIR}`);
+  console.log(`Galeri klasoru: ${UPLOAD_DIR}`);
   if (!process.env.ADMIN_KEY) {
     console.log("UYARI: ADMIN_KEY ayarli degil, varsayilan anahtar kullaniliyor: devadmin123");
   }

@@ -173,7 +173,8 @@
             box-shadow: 0 4px 12px rgba(12, 74, 124, 0.25);
         }
 
-        .time-slot.booked {
+        .time-slot.booked,
+        .time-slot.past {
             background: #f0f0f0;
             color: #999;
             border-color: #ddd;
@@ -182,7 +183,8 @@
             opacity: 0.7;
         }
 
-        .time-slot.booked:hover {
+        .time-slot.booked:hover,
+        .time-slot.past:hover {
             transform: none;
             border-color: #ddd;
             background: #f0f0f0;
@@ -221,6 +223,7 @@
 
         .slot-info .dot.available { background: white; border: 2px solid var(--border); }
         .slot-info .dot.booked { background: #f0f0f0; border: 2px solid #ddd; }
+        .slot-info .dot.past { background: #ececec; border: 2px solid #ccc; }
         .slot-info .dot.selected-dot { background: var(--primary); }
 
         .button-group {
@@ -469,6 +472,7 @@
                         <div class="slot-info">
                             <span class="legend"><span class="dot available"></span> Müsait</span>
                             <span class="legend"><span class="dot booked"></span> Dolu</span>
+                            <span class="legend"><span class="dot past"></span> Geçti</span>
                             <span class="legend"><span class="dot selected-dot"></span> Seçili</span>
                         </div>
                         <div class="time-grid" id="timeGrid"></div>
@@ -562,6 +566,7 @@
         let selectedDate = null;
         let selectedTime = null;
         let bookedTimes = [];
+        let pastTimes = [];
 
         const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
         const timeSlots = (() => {
@@ -580,6 +585,25 @@
 
         function formatDateLocal(year, month, day) {
             return year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+        }
+
+        function getTodayDateStr() {
+            const now = new Date();
+            return formatDateLocal(now.getFullYear(), now.getMonth(), now.getDate());
+        }
+
+        function timeToMinutes(timeStr) {
+            const parts = timeStr.split(':').map(Number);
+            return parts[0] * 60 + parts[1];
+        }
+
+        function getPastTimesForDate(dateStr) {
+            if (dateStr !== getTodayDateStr()) {
+                return [];
+            }
+            const now = new Date();
+            const nowMinutes = now.getHours() * 60 + now.getMinutes();
+            return timeSlots.filter((slot) => timeToMinutes(slot) <= nowMinutes);
         }
 
         // Takvim oluştur
@@ -639,6 +663,7 @@
                 const data = await res.json();
                 if (!res.ok) {
                     bookedTimes = [];
+                    pastTimes = [];
                     if (msgEl) {
                         msgEl.textContent = data.error || 'Müsaitlik bilgisi alınamadı.';
                         msgEl.style.display = 'block';
@@ -647,6 +672,7 @@
                 }
                 if (data.closed) {
                     bookedTimes = timeSlots.slice();
+                    pastTimes = [];
                     if (msgEl) {
                         msgEl.textContent = data.reason || 'Bu gün randevu alınamaz.';
                         msgEl.style.display = 'block';
@@ -654,9 +680,13 @@
                     return;
                 }
                 bookedTimes = data.booked_times || [];
+                pastTimes = data.past_times || getPastTimesForDate(dateStr);
                 if (msgEl) {
-                    if (bookedTimes.length === timeSlots.length) {
-                        msgEl.textContent = 'Bu tarihte tüm saatler dolu. Lütfen başka bir gün seçiniz.';
+                    const unavailableCount = new Set([...bookedTimes, ...pastTimes]).size;
+                    if (unavailableCount >= timeSlots.length) {
+                        msgEl.textContent = selectedDate === getTodayDateStr()
+                            ? 'Bugün için uygun saat kalmadı. Lütfen başka bir gün seçiniz.'
+                            : 'Bu tarihte tüm saatler dolu. Lütfen başka bir gün seçiniz.';
                         msgEl.style.display = 'block';
                     } else {
                         msgEl.style.display = 'none';
@@ -664,6 +694,7 @@
                 }
             } catch (e) {
                 bookedTimes = [];
+                pastTimes = [];
                 if (msgEl) {
                     msgEl.textContent = 'Müsaitlik bilgisi yüklenemedi.';
                     msgEl.style.display = 'block';
@@ -705,18 +736,37 @@
                 return;
             }
 
+            const currentPastTimes = selectedDate === getTodayDateStr()
+                ? getPastTimesForDate(selectedDate)
+                : pastTimes;
+
             timeSlots.forEach(time => {
                 const slot = document.createElement('div');
                 const isBooked = bookedTimes.includes(time);
-                slot.className = 'time-slot' + (isBooked ? ' booked' : '');
-                slot.textContent = isBooked ? time + ' (Dolu)' : time;
+                const isPast = currentPastTimes.includes(time);
+                let slotClass = 'time-slot';
+                let label = time;
 
-                if (!isBooked) {
+                if (isBooked) {
+                    slotClass += ' booked';
+                    label = time + ' (Dolu)';
+                } else if (isPast) {
+                    slotClass += ' past';
+                    label = time + ' (Geçti)';
+                }
+
+                slot.className = slotClass;
+                slot.textContent = label;
+
+                if (!isBooked && !isPast) {
                     slot.addEventListener('click', () => selectTime(time, slot));
                 }
 
-                if (selectedTime === time && !isBooked) {
+                if (selectedTime === time && !isBooked && !isPast) {
                     slot.classList.add('selected');
+                } else if (selectedTime === time && (isBooked || isPast)) {
+                    selectedTime = null;
+                    appointmentTimeInput.value = '';
                 }
 
                 timeGrid.appendChild(slot);
@@ -791,6 +841,12 @@
                 return;
             }
 
+            if (getPastTimesForDate(selectedDate).includes(selectedTime)) {
+                showError('Geçmiş bir saat seçilemez. Lütfen ileri bir saat seçiniz.');
+                renderTimeSlots();
+                return;
+            }
+
             loading.classList.add('show');
             successMessage.classList.remove('show');
             errorMessage.classList.remove('show');
@@ -825,13 +881,14 @@
                     selectedDate = null;
                     selectedTime = null;
                     bookedTimes = [];
+                    pastTimes = [];
                     appointmentDateInput.value = '';
                     appointmentTimeInput.value = '';
                     summaryDiv.style.display = 'none';
                     document.getElementById('timeSlotMessage').style.display = 'none';
                     renderCalendar();
                     renderTimeSlots();
-                    
+
                     // Sayfanın üstüne kaydır
                     window.scrollTo(0, 0);
                     
@@ -868,6 +925,7 @@
             selectedDate = null;
             selectedTime = null;
             bookedTimes = [];
+            pastTimes = [];
             appointmentDateInput.value = '';
             appointmentTimeInput.value = '';
             summaryDiv.style.display = 'none';
@@ -875,6 +933,12 @@
             renderCalendar();
             renderTimeSlots();
         });
+
+        setInterval(() => {
+            if (selectedDate === getTodayDateStr()) {
+                renderTimeSlots();
+            }
+        }, 60000);
 
         renderCalendar();
         renderTimeSlots();
