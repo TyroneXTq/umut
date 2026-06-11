@@ -448,6 +448,29 @@ function isPastAppointmentSlot(dateStr, timeStr, now = new Date()) {
   return getPastTimeSlotsForDate(dateStr, now).includes(timeStr);
 }
 
+function normalizePhone(value) {
+  return String(value || "").replace(/\D/g, "").slice(0, 11);
+}
+
+function isValidPhone(phone) {
+  return /^\d{11}$/.test(normalizePhone(phone));
+}
+
+function isValidEmail(email) {
+  const value = String(email || "").trim();
+  if (!value) {
+    return true;
+  }
+
+  const atIndex = value.indexOf("@");
+  if (atIndex < 1) {
+    return false;
+  }
+
+  const domain = value.slice(atIndex + 1);
+  return /\.com/i.test(domain);
+}
+
 app.get("/api/appointments", requireAdminAuth, (req, res) => {
   db.all("SELECT * FROM appointments ORDER BY id DESC", [], (err, rows) => {
     if (err) {
@@ -515,6 +538,19 @@ app.post("/api/appointments", (req, res) => {
     return res.status(400).json({ error: "Lutfen tum gerekli alanlari doldurunuz." });
   }
 
+  const normalizedPhone = normalizePhone(phone);
+  if (!isValidPhone(normalizedPhone)) {
+    return res.status(400).json({
+      error: "Telefon numarasi 11 haneli olmalidir (ornek: 05XXXXXXXXX).",
+    });
+  }
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({
+      error: "Gecerli bir e-posta giriniz (ornek: isim@domain.com).",
+    });
+  }
+
   if (!/^\d{4}-\d{2}-\d{2}$/.test(appointmentDate)) {
     return res.status(400).json({ error: "Gecerli bir tarih seciniz." });
   }
@@ -555,7 +591,7 @@ app.post("/api/appointments", (req, res) => {
 
       db.run(
         "INSERT INTO appointments (first_name, last_name, phone, email, address, appointment_date, appointment_time, service_type, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [firstName, lastName, phone, email, address, appointmentDate, appointmentTime, serviceType, notes],
+        [firstName, lastName, normalizedPhone, email, address, appointmentDate, appointmentTime, serviceType, notes],
         function onInsert(err) {
           if (err) {
             return res.status(500).json({ error: "Randevu kaydedilemedi" });

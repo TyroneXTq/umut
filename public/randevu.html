@@ -226,6 +226,24 @@
         .slot-info .dot.past { background: #ececec; border: 2px solid #ccc; }
         .slot-info .dot.selected-dot { background: var(--primary); }
 
+        .field-hint {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .field-hint.error {
+            color: var(--error);
+            font-weight: 600;
+        }
+
+        .form-group input.invalid,
+        .form-group select.invalid {
+            border-color: var(--error);
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
         .button-group {
             display: flex;
             gap: 12px;
@@ -406,11 +424,28 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label>Telefon <span class="required">*</span></label>
-                            <input type="tel" name="phone" id="phone" placeholder="05XX XXX XXXX" required />
+                            <input
+                                type="tel"
+                                name="phone"
+                                id="phone"
+                                placeholder="05XXXXXXXXX"
+                                inputmode="numeric"
+                                maxlength="11"
+                                autocomplete="tel"
+                                required
+                            />
+                            <div class="field-hint" id="phoneHint">11 haneli numara giriniz (örnek: 05XXXXXXXXX)</div>
                         </div>
                         <div class="form-group">
                             <label>E-Posta</label>
-                            <input type="email" name="email" id="email" />
+                            <input
+                                type="email"
+                                name="email"
+                                id="email"
+                                placeholder="ornek@domain.com"
+                                autocomplete="email"
+                            />
+                            <div class="field-hint" id="emailHint">İsteğe bağlı — @ ve .com içermelidir</div>
                         </div>
                     </div>
                     <div class="form-grid full">
@@ -604,6 +639,73 @@
             const now = new Date();
             const nowMinutes = now.getHours() * 60 + now.getMinutes();
             return timeSlots.filter((slot) => timeToMinutes(slot) <= nowMinutes);
+        }
+
+        function normalizePhone(value) {
+            return String(value || '').replace(/\D/g, '').slice(0, 11);
+        }
+
+        function isValidPhone(value) {
+            return /^\d{11}$/.test(normalizePhone(value));
+        }
+
+        function isValidEmail(value) {
+            const email = String(value || '').trim();
+            if (!email) {
+                return true;
+            }
+            const atIndex = email.indexOf('@');
+            if (atIndex < 1) {
+                return false;
+            }
+            return /\.com/i.test(email.slice(atIndex + 1));
+        }
+
+        function setFieldState(input, hintEl, isValid, validText, invalidText) {
+            if (!input || !hintEl) {
+                return isValid;
+            }
+            input.classList.toggle('invalid', !isValid);
+            hintEl.classList.toggle('error', !isValid);
+            hintEl.textContent = isValid ? validText : invalidText;
+            return isValid;
+        }
+
+        function validatePhoneField(showMessage) {
+            const phoneInput = document.getElementById('phone');
+            const phoneHint = document.getElementById('phoneHint');
+            const digits = normalizePhone(phoneInput.value);
+            phoneInput.value = digits;
+            const isValid = isValidPhone(digits);
+            if (showMessage || digits.length > 0) {
+                setFieldState(
+                    phoneInput,
+                    phoneHint,
+                    isValid,
+                    '11 haneli numara giriniz (örnek: 05XXXXXXXXX)',
+                    digits.length === 0
+                        ? 'Telefon numarası zorunludur.'
+                        : 'Telefon tam 11 hane olmalıdır (şu an: ' + digits.length + ' hane).'
+                );
+            }
+            return isValid;
+        }
+
+        function validateEmailField(showMessage) {
+            const emailInput = document.getElementById('email');
+            const emailHint = document.getElementById('emailHint');
+            const email = emailInput.value.trim();
+            const isValid = isValidEmail(email);
+            if (showMessage || email.length > 0) {
+                setFieldState(
+                    emailInput,
+                    emailHint,
+                    isValid,
+                    'İsteğe bağlı — @ ve .com içermelidir',
+                    'Geçerli e-posta giriniz (örnek: isim@domain.com).'
+                );
+            }
+            return isValid;
         }
 
         // Takvim oluştur
@@ -847,6 +949,19 @@
                 return;
             }
 
+            const phoneOk = validatePhoneField(true);
+            const emailOk = validateEmailField(true);
+            if (!phoneOk) {
+                showError('Telefon numarası 11 haneli olmalıdır.');
+                document.getElementById('phone').focus();
+                return;
+            }
+            if (!emailOk) {
+                showError('E-posta @ ve .com içermelidir (örnek: isim@domain.com).');
+                document.getElementById('email').focus();
+                return;
+            }
+
             loading.classList.add('show');
             successMessage.classList.remove('show');
             errorMessage.classList.remove('show');
@@ -855,8 +970,8 @@
             const data = {
                 first_name: formData.get('first_name'),
                 last_name: formData.get('last_name'),
-                phone: formData.get('phone'),
-                email: formData.get('email'),
+                phone: normalizePhone(formData.get('phone')),
+                email: String(formData.get('email') || '').trim(),
                 address: formData.get('address'),
                 appointment_date: selectedDate,
                 appointment_time: selectedTime,
@@ -916,8 +1031,29 @@
             }, 5000);
         }
 
-        // Form değişikliklerini dinle
-        ['firstName', 'lastName', 'phone', 'serviceType'].forEach(id => {
+        const phoneInput = document.getElementById('phone');
+        const emailInput = document.getElementById('email');
+
+        phoneInput.addEventListener('input', () => {
+            phoneInput.value = normalizePhone(phoneInput.value);
+            validatePhoneField(phoneInput.value.length > 0);
+            updateSummary();
+        });
+
+        phoneInput.addEventListener('blur', () => {
+            validatePhoneField(true);
+        });
+
+        emailInput.addEventListener('input', () => {
+            validateEmailField(emailInput.value.length > 0);
+            updateSummary();
+        });
+
+        emailInput.addEventListener('blur', () => {
+            validateEmailField(true);
+        });
+
+        ['firstName', 'lastName', 'serviceType'].forEach(id => {
             document.getElementById(id).addEventListener('change', updateSummary);
         });
 
